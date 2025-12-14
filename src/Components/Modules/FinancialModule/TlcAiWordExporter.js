@@ -85,15 +85,24 @@ const parseMarkdownToDocx = (markdown) => {
 
             case "list":
                 token.items.forEach((item) => {
-                    content.push(
-                        new Paragraph({
-                            text: item.text,
-                            bullet: { level: 0 },
-                            spacing: { after: 100 },
-                        })
-                    );
+                    // Split raw text by lines
+                    const lines = item.raw
+                        .split("\n")
+                        .map(l => l.replace(/^-\s*/, "").trim())
+                        .filter(Boolean);
+
+                    lines.forEach((line, index) => {
+                        content.push(
+                            new Paragraph({
+                                text: line,
+                                bullet: { level: index === 0 ? 0 : 1 }, // 👈 nested bullets
+                                spacing: { after: 100 },
+                            })
+                        );
+                    });
                 });
                 break;
+
 
             case "table":
                 const rows = token.rows.map((row) =>

@@ -1,205 +1,189 @@
-import React, { useState } from "react";
+import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github.css";
-import { PiPlusCircleFill, PiMinusCircleFill } from "react-icons/pi";
 
 export default function AIAnalysisReportViewer({ reportText, loading }) {
-  const [isOpen, setIsOpen] = useState(true);
-
   if (loading) {
     return (
-      <div className="flex justify-center py-10 text-gray-600 animate-pulse font-inter">
+      <div
+        style={{
+          textAlign: "center",
+          padding: "20px",
+          color: "#6b7280",
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
         ⏳ Generating AI insights...
       </div>
     );
   }
 
-  if (!reportText) {
-    return (
-      <div className="text-gray-500 text-center py-6 font-inter">
-        Click “AI Analysis” to generate the report.
-      </div>
-    );
-  }
+  if (!reportText) return null;
 
   return (
     <div
-      className="rounded-2xl shadow-md"
+      className="ai-markdown-body"
       style={{
-        background: "#f4f1ff",
-        padding: "22px 26px",
+        background: "#ffffff",
+        borderRadius: "12px",
+        padding: "28px",
         marginBottom: "30px",
-        border: "1px solid #d7cffc",
-        transition: "0.3s ease",
+        border: "1px solid #e5e7eb",
+        fontFamily: "Inter, sans-serif",
+        fontSize: "15px",
+        lineHeight: "1.75",
+        color: "#1f2937",
+        textAlign: "left", // ✅ FORCE LEFT ALIGN
       }}
     >
-      {/* Header */}
-      <div
-        onClick={() => setIsOpen(!isOpen)}
-        style={{
-          display: "flex",
-          alignItems: "left",
-          justifyContent: "space-between",
-          cursor: "pointer",
-          marginBottom: "12px",
-        }}
-      >
-        <h2
-          style={{
-            fontFamily: "Inter",
-            fontWeight: "700",
-            fontSize: "22px",
-            color: "#6c4cdc",
-            margin: "auto",
-          }}
-        >
-          AI Analysis Report
-        </h2>
-        {isOpen ? (
-          <PiMinusCircleFill size={24} color="#6c4cdc" />
-        ) : (
-          <PiPlusCircleFill size={24} color="#6c4cdc" />
-        )}
-      </div>
+      <ReactMarkdown
+        children={reportText.replace(/```(?:markdown)?|```/g, "")}
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw, rehypeHighlight]}
+        components={{
+          /* ---------- TITLES ---------- */
+          h1: ({ node, ...props }) => (
+            <h1
+              style={{
+                textAlign: "center", // ✅ ONLY MAIN TITLE CENTERED
+                fontSize: "28px",
+                fontWeight: 700,
+                marginBottom: "28px",
+                color: "#111827",
+              }}
+              {...props}
+            />
+          ),
 
-      {/* Markdown Section */}
-      {isOpen && (
-        <div
-          style={{
-            background: "white",
-            borderRadius: "12px",
-            padding: "24px",
-            color: "#1f1f1f",
-            fontFamily: "Inter, sans-serif",
-            fontSize: "15px",
-            lineHeight: "1.8",
-            boxShadow: "inset 0 0 0 1px #eee",
-            textAlign:"justify"
-          }}
-          className="ai-markdown-body"
-        >
-          <ReactMarkdown
-            children={reportText.replace(/```(?:markdown)?|```/g, "")}
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeRaw, rehypeHighlight]}
-            components={{
-              h2: ({ node, ...props }) => (
-                <h2
-                  style={{
-                    color: "#6c4cdc",
-                    fontSize: "19px",
-                    fontWeight: 700,
-                    marginTop: "28px",
-                    marginBottom: "10px",
-                    borderBottom: "2px solid #dcd3ff",
-                    paddingBottom: "4px",
-                    textTransform: "capitalize",
-                  }}
-                  {...props}
-                />
-              ),
-              h3: ({ node, ...props }) => (
-                <h3
-                  style={{
-                    color: "#5b47d9",
-                    fontSize: "16px",
-                    fontWeight: 600,
-                    marginTop: "18px",
-                    marginBottom: "8px",
-                  }}
-                  {...props}
-                />
-              ),
-              p: ({ node, ...props }) => (
-                <p
-                  style={{
-                    marginBottom: "10px",
-                    color: "#2d2d2d",
-                    fontWeight: "400",
-                  }}
-                  {...props}
-                />
-              ),
-              strong: ({ node, ...props }) => (
-                <strong
-                  style={{
-                    color: "#1f1660",
-                    fontWeight: 600,
-                  }}
-                  {...props}
-                />
-              ),
-              ul: ({ node, ...props }) => (
-                <ul
-                  style={{
-                    paddingLeft: "20px",
-                    marginBottom: "10px",
-                    listStyleType: "disc",
-                  }}
-                  {...props}
-                />
-              ),
-              ol: ({ node, ...props }) => (
-                <ol
-                  style={{
-                    paddingLeft: "22px",
-                    marginBottom: "12px",
-                    listStyleType: "decimal",
-                  }}
-                  {...props}
-                />
-              ),
-              li: ({ node, ...props }) => (
-                <li
-                  style={{
-                    marginBottom: "5px",
-                    paddingLeft: "4px",
-                  }}
-                  {...props}
-                />
-              ),
-              table: ({ node, ...props }) => (
-                <table
-                  style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                    marginTop: "12px",
-                    marginBottom: "18px",
-                    fontSize: "14px",
-                  }}
-                  {...props}
-                />
-              ),
-              th: ({ node, ...props }) => (
-                <th
-                  style={{
-                    background: "#ece9ff",
-                    border: "1px solid #d7cffc",
-                    padding: "8px",
-                    textAlign: "left",
-                    fontWeight: "600",
-                    color: "#3a2fc2",
-                  }}
-                  {...props}
-                />
-              ),
-              td: ({ node, ...props }) => (
-                <td
-                  style={{
-                    border: "1px solid #e5defc",
-                    padding: "8px",
-                    color: "#333",
-                  }}
-                  {...props}
-                />
-              ),
-            }}
-          />
-        </div>
-      )}
+          h2: ({ node, ...props }) => (
+            <h2
+              style={{
+                fontSize: "20px",
+                fontWeight: 700,
+                marginTop: "28px",
+                marginBottom: "12px",
+                borderBottom: "1px solid #e5e7eb",
+                paddingBottom: "6px",
+                color: "#111827",
+                textAlign: "left",
+              }}
+              {...props}
+            />
+          ),
+
+          h3: ({ node, ...props }) => (
+            <h3
+              style={{
+                fontSize: "16px",
+                fontWeight: 600,
+                marginTop: "18px",
+                marginBottom: "8px",
+                color: "#374151",
+                textAlign: "left",
+              }}
+              {...props}
+            />
+          ),
+
+          /* ---------- TEXT ---------- */
+          p: ({ node, ...props }) => (
+            <p
+              style={{
+                marginBottom: "10px",
+                color: "#2d2d2d",
+                textAlign: "left",
+              }}
+              {...props}
+            />
+          ),
+
+          strong: ({ node, ...props }) => (
+            <strong
+              style={{
+                fontWeight: 600,
+                color: "#111827",
+              }}
+              {...props}
+            />
+          ),
+
+          /* ---------- LISTS ---------- */
+          ul: ({ node, ...props }) => (
+            <ul
+              style={{
+                paddingLeft: "22px",
+                marginBottom: "12px",
+                listStyleType: "disc",
+                textAlign: "left",
+              }}
+              {...props}
+            />
+          ),
+
+          ol: ({ node, ...props }) => (
+            <ol
+              style={{
+                paddingLeft: "22px",
+                marginBottom: "12px",
+                listStyleType: "decimal",
+                textAlign: "left",
+              }}
+              {...props}
+            />
+          ),
+
+          li: ({ node, ...props }) => (
+            <li
+              style={{
+                marginBottom: "6px",
+              }}
+              {...props}
+            />
+          ),
+
+          /* ---------- TABLE ---------- */
+          table: ({ node, ...props }) => (
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                marginTop: "14px",
+                marginBottom: "20px",
+                fontSize: "14px",
+                textAlign: "left",
+              }}
+              {...props}
+            />
+          ),
+
+          th: ({ node, ...props }) => (
+            <th
+              style={{
+                background: "#f9fafb",
+                border: "1px solid #e5e7eb",
+                padding: "8px",
+                fontWeight: 600,
+                color: "#111827",
+              }}
+              {...props}
+            />
+          ),
+
+          td: ({ node, ...props }) => (
+            <td
+              style={{
+                border: "1px solid #e5e7eb",
+                padding: "8px",
+                color: "#374151",
+              }}
+              {...props}
+            />
+          ),
+        }}
+      />
     </div>
   );
 }

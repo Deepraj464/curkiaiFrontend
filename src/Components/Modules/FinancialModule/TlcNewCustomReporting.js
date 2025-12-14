@@ -21,7 +21,7 @@ import TlcPayrollDateFilterIcon from "../../../Images/TlcPayrollDateFilterIcon.p
 import TlcPayrollDepartmentIcon from "../../../Images/TlcPayrollDepartmentIcon.png"
 import TlcPayrollTypeIcon from "../../../Images/TlcPayrollType.png"
 import TlcPayrollStateIcon from "../../../Images/TlcPayrollStateIcon.png"
-import TlcPayrollCategoryIcon from "../../../Images/TlcPayrollCategoryIcon.png"
+import TlcPayrollHistoryIcon from "../../../Images/TlcPayrollHistory.png"
 import TlcPayrollDownloadIcon from "../../../Images/TlcPayrollDownloadIcon.png"
 import { dummyData, dummyPayload } from "./TlcPayrollDummyData";
 import TlcSaveButton from "../../../Images/Tlc_Save_Button.png"
@@ -841,7 +841,7 @@ export default function TlcNewCustomerReporting(props) {
                     className="custom-input"
                     onClick={() => setOpen(!open)}
                     style={{
-                        height,
+                        height: placeholder === "Role" ? "31px" : height,
                         display: "flex",
                         alignItems: "center",
                         border: "1px solid #D1D5DB",
@@ -1246,7 +1246,7 @@ export default function TlcNewCustomerReporting(props) {
                                     whiteSpace: "nowrap",
                                 }}
                             >
-                                Who are you
+                                Who are you ?
                             </div>
 
                             <div
@@ -1395,6 +1395,7 @@ export default function TlcNewCustomerReporting(props) {
                                     display: "flex",
                                     alignItems: "center",
                                     gap: "8px",
+                                    marginTop: "17px",
                                     opacity:
                                         activeTabData.loading || activeTabData.uploading?.accounts
                                             ? 0.6
@@ -1645,7 +1646,7 @@ export default function TlcNewCustomerReporting(props) {
                         className={`dashboard ${!isAnyAccordionOpen ? "dashboard-decrease-margin-bottom" : ""}`}
                     >
                         <AccordionHeader
-                            title={`AI Summary Report ${activeTabData.startDate && activeTabData.endDate
+                            title={`AI Insight ${activeTabData.startDate && activeTabData.endDate
                                 ? `(${formatDateRange()})`
                                 : ""
                                 }`}
@@ -1804,14 +1805,32 @@ export default function TlcNewCustomerReporting(props) {
 
                 {activeTabData.stage === "filters" && !activeTabData.analysisData && (
                     <button className="search-btn" onClick={handleAnalyse} disabled={activeTabData.loading}>
-                        {activeTabData.loading ? "Processing..." : "Analyse"}
+                        {activeTabData.loading ? "Processing..." : "AI Analyse"}
                     </button>
                 )}
             </div>
 
             {activeTabData.stage !== "loading" && (
                 <section className="history-container">
-                    <div className="history-title">History</div>
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                        }}
+                    >
+                        <img
+                            src={TlcPayrollHistoryIcon}
+                            alt="icon"
+                            style={{
+                                width: "22px",
+                                height: "21px",
+                                pointerEvents: "none",
+                                marginBottom:"13px"
+                            }}
+                        />
+                        <div className="history-title">History</div>
+                    </div>
 
                     {loadingHistory ? (
                         <p style={{ textAlign: "center", color: "#555" }}>Loading history...</p>
