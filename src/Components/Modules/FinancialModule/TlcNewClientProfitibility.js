@@ -31,6 +31,7 @@ const TlcNewClientProfitability = (props) => {
     const user = props.user
     console.log("user in client profitibility", user)
     const userEmail = user?.email
+    // console.log("useremail in profitibility",userEmail)
     const [startMonth, setStartMonth] = useState("");
     const [endMonth, setEndMonth] = useState("");
     const [files, setFiles] = useState([]);
