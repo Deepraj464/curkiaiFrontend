@@ -34,6 +34,8 @@ import TlcPayrollHistoryIcon from "../../../Images/TlcPayrollHistory.png"
 import TlcCompareAnalyseIcon from "../../../Images/Tlc_Compare_Analyse_Icon.png"
 import WhoAreYouToggle from "./WhoAreYouToggle";
 import "../../../Styles/TlcNewCustomReporting.css";
+import { useRef } from "react";
+
 const NewFinancialHealth = (props) => {
     const [financialReportFiles, setFinancialReportFiles] = useState([]);
     const [financialTemplate, setFinancialTemplate] = useState(null);
@@ -85,7 +87,8 @@ const NewFinancialHealth = (props) => {
     const [uiActiveTabId, setUiActiveTabId] = useState(1);
 
     const uiActiveTab = uiTabs.find(t => t.id === uiActiveTabId);
-
+    const previewRef = useRef(null);
+ 
     const handleUiNewTab = () => {
         const newId = uiTabs.length
             ? Math.max(...uiTabs.map(t => t.id)) + 1
@@ -421,8 +424,8 @@ const NewFinancialHealth = (props) => {
                 return;
             }
 
-            // const userEmail = props.user.email.trim().toLowerCase();
-            const userEmail = "kris@curki.ai"
+            const userEmail = props.user.email.trim().toLowerCase();
+            // const userEmail = "kris@curki.ai"
             // console.log("Using email:", userEmail);
 
             // Append required fields
@@ -1188,6 +1191,7 @@ const NewFinancialHealth = (props) => {
                             apiExcelUrls={apiExcelUrls}
                             titles={titleArray}
                             financialReport={financialReport}
+                            ref={previewRef}
                         />
                     )}
 
@@ -1286,7 +1290,7 @@ const NewFinancialHealth = (props) => {
                         }}
                     >
                         <button
-                            onClick={handleDownloadReport}
+                            onClick={() => previewRef.current?.downloadAll()}
                             style={{
                                 background: "var(--Curki-2nd-Portal-1, #14C8A8)",
                                 color: "#fff",
