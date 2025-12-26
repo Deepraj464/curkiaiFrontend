@@ -174,6 +174,17 @@ const NewFinancialHealth = (props) => {
             setActiveTab(remaining[0].id);
         }
     };
+    const formatDateRangeForTab = (startDate, endDate) => {
+        if (!startDate || !endDate) return null;
+
+        const format = (d) =>
+            d instanceof Date
+                ? d.toISOString().split("T")[0]
+                : new Date(d).toISOString().split("T")[0];
+
+        return `${format(startDate)} - ${format(endDate)}`;
+    };
+
     const formatHistoryDateRange = (dateRange) => {
         if (!Array.isArray(dateRange) || dateRange.length !== 2) return "–";
 
@@ -633,7 +644,10 @@ const NewFinancialHealth = (props) => {
                         rawRange[1] ? new Date(rawRange[1]) : null,
                     ]
                     : [null, null];
-
+            const historyTabName = formatDateRangeForTab(
+                parsedDateRange[0],
+                parsedDateRange[1]
+            );
             // ---- Base payload (common for ALL types) ----
             const baseTabPayload = {
                 responseData: data.responseData,
@@ -662,6 +676,7 @@ const NewFinancialHealth = (props) => {
                     apiExcelUrls,
                     titleArray,
                     excel_exports: data.excelExports || {},
+                    ...(historyTabName ? { name: historyTabName } : {}),
                 });
 
             } else if (data.reportType === "upload") {
@@ -671,6 +686,7 @@ const NewFinancialHealth = (props) => {
                     apiExcelUrls: [],
                     titleArray: [],
                     excel_exports: {},
+                     ...(historyTabName ? { name: historyTabName } : {}),
                 });
 
             } else {
@@ -1019,12 +1035,14 @@ const NewFinancialHealth = (props) => {
             const figures = normalizeFigures(vizData);
             // console.log("analysisData", analysisData)
             // --- Step 5: Save state ---
+            const tabDateName = formatDateRangeForTab(startDate, endDate);
             updateTab({
                 responseData: analysisData.final,
                 financialVisualizations: figures,
                 excel_exports: analysisData?.excel_exports,
                 loading: false,
                 progress: 100,
+                ...(tabDateName ? { name: tabDateName } : {}),
             });
 
 

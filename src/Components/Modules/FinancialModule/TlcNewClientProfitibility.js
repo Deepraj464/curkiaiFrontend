@@ -81,7 +81,7 @@ const TlcNewClientProfitability = (props) => {
             uploading: false,
             directFinalTable: null,
             isFromHistory: false,
-            saving: false, 
+            saving: false,
         },
     ]);
 
@@ -159,7 +159,7 @@ const TlcNewClientProfitability = (props) => {
                 uploading: false,
                 directFinalTable: null,
                 isFromHistory: false,
-                saving: false, 
+                saving: false,
             },
         ]);
 
@@ -441,9 +441,10 @@ const TlcNewClientProfitability = (props) => {
 
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Save failed");
+            alert("Saved successfully");
 
             // 🔑 IMPORTANT: sirf current tab mark karo
-            updateTab({ isFromHistory: true,saving: false,  });
+            updateTab({ isFromHistory: true, saving: false, });
 
             // history list me add
             setHistoryList(prev => [
@@ -1037,8 +1038,6 @@ const TlcNewClientProfitability = (props) => {
             </div>
         );
     }
-
-    
 
 
 
