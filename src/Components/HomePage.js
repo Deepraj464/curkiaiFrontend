@@ -756,7 +756,6 @@ const HomePage = () => {
                               fontSize: "14px",
                               fontWeight: 500,
                               fontFamily: "Inter",
-                              fontWeight: 500
                             }}
                           >
                             New Chat
