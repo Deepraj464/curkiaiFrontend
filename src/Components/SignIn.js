@@ -163,7 +163,14 @@ const SignIn = ({ show, onClose }) => {
         email,
         newPassword
       );
-
+      // console.log("New account created:", {
+      //   uid: user.uid,
+      //   email: user.email,
+      //   emailVerified: user.emailVerified,
+      //   providerId: user.providerData[0]?.providerId,
+      //   creationTime: user.metadata.creationTime,
+      //   lastSignInTime: user.metadata.lastSignInTime,
+      // });
       const user = userCredential.user;
 
       // EmailJS notification
@@ -243,6 +250,7 @@ const SignIn = ({ show, onClose }) => {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
+
       alert("Login successful!");
       onClose();
     } catch (err) {
