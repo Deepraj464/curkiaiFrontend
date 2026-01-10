@@ -366,7 +366,7 @@ const TlcNewClientProfitability = (props) => {
         if (!end || start === end) {
             return format(start);
         }
-        console.log(`start${format(start)} – end${format(end)}`)
+
         // otherwise → range
         return `${format(start)} – ${format(end)}`;
     };
@@ -639,8 +639,8 @@ const TlcNewClientProfitability = (props) => {
                 email: user?.email,
                 responseData: activeTabData.responseData,
                 filters: {
-                    start: startDate ? formatYearMonth(startDate) : null,
-                    end: endDate ? formatYearMonth(endDate) : null,
+                    start: startDate ? startDate.toISOString() : null,
+                    end: endDate ? endDate.toISOString() : null,
                     state: activeTabData.selectedState.map(s => s.value).join(", "),
                     department: activeTabData.selectedDepartment.map(d => d.value).join(", "),
                     role: activeTabData.selectedRole.map(r => r.value).join(", "),
@@ -1122,21 +1122,13 @@ const TlcNewClientProfitability = (props) => {
                                 <div className="history-date-range">
                                     <span className="label">Date Range: </span>
                                     <span className="value">
-                                        {item?.filters?.start
-                                            ? new Date(item?.filters?.start).toLocaleDateString("en-GB", {
-                                                day: "2-digit",
-                                                month: "short",
-                                                year: "2-digit",
-                                            })
-                                            : "N/A"}{" "}
-                                        –{" "}
-                                        {item?.filters?.end
-                                            ? new Date(item?.filters?.end).toLocaleDateString("en-GB", {
-                                                day: "2-digit",
-                                                month: "short",
-                                                year: "2-digit",
-                                            })
-                                            : "N/A"}
+                                        <span className="value">
+                                            {formatHistoryDateRange(
+                                                item.filters?.start,
+                                                item.filters?.end
+                                            )}
+                                        </span>
+
                                     </span>
                                 </div>
 
