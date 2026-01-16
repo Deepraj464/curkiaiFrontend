@@ -11,6 +11,8 @@ import { MdOutlineHistory } from "react-icons/md";
 import RosterHistory from "./RosterHistory";
 import { LuDownload } from "react-icons/lu";
 import incrementAnalysisCount from "../FinancialModule/TLcAnalysisCount";
+import OnboardingForm from "../../OnboardingForm";
+import { RiSettingsLine } from "react-icons/ri";
 
 const API_BASE = "https://curki-test-prod-auhyhehcbvdmh3ef.canadacentral-01.azurewebsites.net";
 
@@ -28,6 +30,7 @@ const SmartRostering = (props) => {
     const [promptLoading, setPromptLoading] = useState(false);
     const [manualMetrics, setManualMetrics] = useState(null);
     const [currentIndex, setCurrentIndex] = useState(1);
+    const [openRosterSetting, setOpenRosterSetting] = useState(false);
     // console.log("unallocatedClients", unallocatedClients)
     const handleScroll = () => {
         const container = document.getElementById("unallocated-scroll-container");
@@ -49,6 +52,15 @@ const SmartRostering = (props) => {
     const [unauthorized, setUnauthorized] = useState(false);
     const uploadDisabled = !!visualCareCreds;  // true when creds exist
     // console.log("unallocatedClients.length", unallocatedClients.length)
+    const formatDateDMY = (dateStr) => {
+        if (!dateStr) return "";
+
+        // expect YYYY-MM-DD
+        const [year, month, day] = dateStr.split("-");
+        if (!year || !month || !day) return dateStr;
+
+        return `${day}-${month}-${year}`;
+    };
     const maskClientForKris = (client) => {
         if (!client) return client;
 
@@ -487,7 +499,10 @@ const SmartRostering = (props) => {
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '30px' }}>
                         <div className="rostering-date">{formattedDate}</div>
-                        <button style={{ padding: '10px 20px', backgroundColor: '#6c4cdc', border: 'none', borderRadius: '4px', outline: 'none', color: 'white', fontSize: '16px', fontFamily: 'Inter', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }} onClick={() => setScreen(3)}>History <MdOutlineHistory size={18} color="white" /></button>
+                        <div style={{ display: 'flex', gap: '14px' }}>
+                            <button className="roster-settings-btn" onClick={() => setScreen(3)}><MdOutlineHistory size={18} color="#707493" /> History </button>
+                            <button className="roster-settings-btn" onClick={() => setOpenRosterSetting(true)}><RiSettingsLine size={18} color="#707493" />Rostering Settings</button>
+                        </div>
                     </div>
 
                     <div className="rostering-stats-row">
@@ -676,7 +691,7 @@ const SmartRostering = (props) => {
                                                     onClick={() => handleClientClick(client)}
 
                                                 >
-                                                    <p style={{ marginBottom: '12px' }}><strong>Date Of Service:</strong> {client.dateOfService}</p>
+                                                    <p style={{ marginBottom: '12px' }}><strong>Date Of Service:</strong> {formatDateDMY(client.dateOfService)}</p>
                                                     <p style={{ marginBottom: '12px' }}><strong>Client ID:</strong> {client.clientId}</p>
                                                     <p style={{ marginBottom: '12px' }}><strong>Client Name:</strong> {client.name}</p>
                                                     <p style={{ marginBottom: '12px' }}><strong>Sex:</strong> {client.sex}</p>
@@ -789,7 +804,7 @@ const SmartRostering = (props) => {
                 <RosterHistory
                     setScreen={setScreen}
                     userEmail={userEmail}
-                    SetIsSmartRosteringHistory = {props.SetIsSmartRosteringHistory}
+                    SetIsSmartRosteringHistory={props.SetIsSmartRosteringHistory}
                 />
             )}
             {loading && (
@@ -797,6 +812,9 @@ const SmartRostering = (props) => {
                     <div className="spinner"></div>
                     <p>Running Smart Rostering...</p>
                 </div>
+            )}
+            {openRosterSetting && (
+                <OnboardingForm onClose={() => setOpenRosterSetting(false)} userEmail={userEmail}/>
             )}
         </>
     );
