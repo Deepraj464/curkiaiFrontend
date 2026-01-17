@@ -203,8 +203,7 @@ const RosterDetails = ({ setScreen, rosteringResponse, API_BASE, selectedClient,
                     DateOfBirth: selectedClient.dob || null,
 
                     // ✔ Phone
-                    // Phone: normalizeAuPhone(selectedClient.phone),
-                    Phone: normalizeInPhone("7020737478"),
+                    Phone: normalizeAuPhone(selectedClient.phone),
                     // ✔ Address (auto split)
                     Address1: selectedClient.address || "",
                     Address2: "",
@@ -224,8 +223,7 @@ const RosterDetails = ({ setScreen, rosteringResponse, API_BASE, selectedClient,
                 staffList: selectedStaff.map(s => ({
                     staffId: s.id || s.staffId,
                     name: s.name,
-                    // phone: normalizeAuPhone(s?.phone),
-                    phone: normalizeInPhone("7020737478"),
+                    phone: normalizeAuPhone(s?.phone),
                     email: s.email,
                     gender: s.gender || s.sex,
                     location: s.location,
@@ -252,8 +250,8 @@ const RosterDetails = ({ setScreen, rosteringResponse, API_BASE, selectedClient,
 
             console.log("Broadcast Payload:", payload);
 
-            // const response = await axios.post(`${API_BASE}/api/sampleBroadcast`, payload);
-            const response = await axios.post(` https://ae4ef53dc446.ngrok-free.app/api/sampleBroadcast`, payload);
+            const response = await axios.post(`${API_BASE}/api/sampleBroadcast`, payload);
+            // const response = await axios.post(` https://ae4ef53dc446.ngrok-free.app/api/sampleBroadcast`, payload);
 
             setShowSuccess(true);
 
