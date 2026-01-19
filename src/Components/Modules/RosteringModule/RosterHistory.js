@@ -7,6 +7,7 @@ import { AiFillClockCircle } from "react-icons/ai";
 import { LuBriefcaseBusiness } from "react-icons/lu";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import axios from "axios";
+import BroadcastMessage from "./BroadCastMessage";
 
 const API_BASE = "https://curki-test-prod-auhyhehcbvdmh3ef.canadacentral-01.azurewebsites.net";
 
@@ -234,10 +235,22 @@ const RosterHistory = (props) => {
             // console.log("Raw messagesArr:", messagesArr);
             // Convert to UI format
             const msgs = messagesArr.map((m, index) => {
+                const msg = m.message?.toLowerCase() || "";
+
+                const isShiftConfirmed =
+                    msg.includes("shift confirmed") ||
+                    msg.includes("has been confirmed");
+
                 const isBroadcast =
                     m.fromRole === "RM" &&
                     m.toRole === "SW" &&
-                    m.message?.toLowerCase().includes("open shift");
+                    (
+                        msg.includes("open shift") ||
+                        msg.includes("vacant shift") ||
+                        msg.includes("shift is available") ||
+                        msg.includes("please review") ||
+                        isShiftConfirmed
+                    );
 
                 return {
                     id: `${conversationId}-${index}`,
@@ -250,9 +263,10 @@ const RosterHistory = (props) => {
                         : m.fromRole === "RM"
                             ? "me"
                             : "other",
-
+                    isBroadcast,
                     rawFromPhone: m.fromPhone,
-                    rawToPhone: m.toPhone
+                    rawToPhone: m.toPhone,
+                    fromRole: m.fromRole,
                 };
             });
 
@@ -567,12 +581,12 @@ const RosterHistory = (props) => {
     return (
         <div className="rostering-history-container">
 
-            <div className="roster-back-btn" onClick={() => {
+            <div className="roster-history-back-btn" onClick={() => {
                 if (typeof props.setIsSmartRosteringHistory === "function") {
                     props.SetIsSmartRosteringHistory(false);
                 }
                 props.setScreen(1);
-            }} style={{ left: '30px', top: '-45px' }}>
+            }}>
                 <GoArrowLeft size={22} color="#6C4CDC" />
                 <span>Back</span>
             </div>
@@ -853,20 +867,47 @@ const RosterHistory = (props) => {
 
                                     {/* ===== CHAT SECTION ===== */}
                                     <div style={{ fontSize: '16px', fontWeight: '500', fontFamily: 'Inter', textAlign: 'left', margin: '8px 14px' }}>Messages</div>
-                                    <div className="messages-section">
+                                    {/* <div className="messages-section">
                                         {messages.map((m) => (
-                                            <div key={m.id} className={`msg ${m.sender === "me" ? "you" : ""}`}>
-                                                <div className={`msg-bubble ${m.sender === "me" ? "right" : "left"}`}>
-                                                    {m.text}
-                                                </div>
-                                                <div className={`msg-time ${m.sender === "me" ? "rightss" : "leftss"}`}>
-                                                    {m.time}
-                                                </div>
-                                            </div>
+                                            // <div key={m.id} className={`msg ${m.sender === "me" ? "you" : ""}`}>
+                                            //     <div className={`msg-bubble ${m.sender === "me" ? "right" : "left"}`}>
+                                            //         {m.text}
+                                            //     </div>
+                                            //     <div className={`msg-time ${m.sender === "me" ? "rightss" : "leftss"}`}>
+                                            //         {m.time}
+                                            //     </div>
+                                            // </div>
+                                            <BroadcastMessage key={m.id} message={m} />
                                         ))}
 
                                         <div ref={messageEndRef}></div>
+                                    </div> */}
+                                    <div className="messages-section">
+                                        {messages.map((m) => {
+
+                                            // 🟣 1. BROADCAST / TEMPLATE → LEFT
+                                            if (m.isBroadcast) {
+                                                return <BroadcastMessage key={m.id} message={m} />;
+                                            }
+
+                                            // 🟢 2. NORMAL MESSAGE → ROLE BASED
+                                            const isRight = m.fromRole === "RM";
+
+                                            return (
+                                                <div key={m.id} className={`msg ${isRight ? "you" : ""}`}>
+                                                    <div className={`msg-bubble ${isRight ? "right" : "left"}`}>
+                                                        {m.text}
+                                                    </div>
+                                                    <div className={`msg-time ${isRight ? "rightss" : "leftss"}`}>
+                                                        {m.time}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+
+                                        <div ref={messageEndRef}></div>
                                     </div>
+
 
 
                                     {/* input */}
