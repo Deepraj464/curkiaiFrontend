@@ -345,8 +345,15 @@ const VoiceModule = (props) => {
         const cleanedText = cleanText(template.prompt || "");
         setAnalysisText(cleanedText);
 
+        const parsedMappings =
+            typeof template.mappings === "string"
+                ? JSON.parse(template.mappings)
+                : template.mappings;
+
+        setRawMapper(parsedMappings); // source of truth
+
         const rowsArray = normalizeFieldMappings(
-            extractMapperFields(template.mappings)   // ✅ FIX
+            extractMapperFields(parsedMappings)
         );
 
         setMapperRows(rowsArray);
@@ -659,7 +666,24 @@ const VoiceModule = (props) => {
             formData.append("domain", domain);
             formData.append("userEmail", userEmail);
             formData.append("prompt", rawPrompt);
-            formData.append("mappings", JSON.stringify(rawMapper));
+            const updatedMapper = {
+                mapper: {
+                    field_mappings: mapperRows.reduce((acc, row) => {
+                        if (!row.template_field) return acc;
+
+                        acc[row.template_field] = {
+                            source: row.source,
+                            type: row.type,
+                            required: !!row.required
+                        };
+
+                        return acc;
+                    }, {})
+                }
+            };
+
+            formData.append("mappings", JSON.stringify(updatedMapper));
+
             formData.append("sessionId", sessionId);
 
             // ✅ MAIN TEMPLATE

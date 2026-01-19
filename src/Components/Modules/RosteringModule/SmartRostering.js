@@ -13,11 +13,13 @@ import { LuDownload } from "react-icons/lu";
 import incrementAnalysisCount from "../FinancialModule/TLcAnalysisCount";
 import OnboardingForm from "../../OnboardingForm";
 import { RiSettingsLine } from "react-icons/ri";
+import { FiCheck } from "react-icons/fi";
 
 const API_BASE = "https://curki-test-prod-auhyhehcbvdmh3ef.canadacentral-01.azurewebsites.net";
 
 const SmartRostering = (props) => {
     const userEmail = props?.user?.email;
+    // const userEmail = "kris@curki.ai";
     const [screen, setScreen] = useState(1);
     const [query, setQuery] = useState("");
     const [selectedFile, setSelectedFile] = useState([]);
@@ -32,7 +34,14 @@ const SmartRostering = (props) => {
     const [currentIndex, setCurrentIndex] = useState(1);
     const [openRosterSetting, setOpenRosterSetting] = useState(false);
     const [rosteringSettings, setRosteringSettings] = useState(null);
+    const [bulkMode, setBulkMode] = useState(false);
+    const [selectedShiftIds, setSelectedShiftIds] = useState([]);
 
+    // bulk processing
+    const [bulkQueue, setBulkQueue] = useState([]);
+    const [bulkResults, setBulkResults] = useState({});
+    const [activeTab, setActiveTab] = useState(null);
+    const [processingId, setProcessingId] = useState(null);
     // console.log("unallocatedClients", unallocatedClients)
     useEffect(() => {
         if (!userEmail) return;
@@ -55,7 +64,7 @@ const SmartRostering = (props) => {
 
         fetchRosteringSettings();
     }, [userEmail]);
-    // console.log("rostering settings in smart rostering main page", rosteringSettings)
+    console.log("rostering settings in smart rostering main page", rosteringSettings)
     const handleScroll = () => {
         const container = document.getElementById("unallocated-scroll-container");
         if (!container) return;
@@ -75,7 +84,7 @@ const SmartRostering = (props) => {
     const [unauthorized, setUnauthorized] = useState(false);
     const visualCareCreds =
         rosteringSettings?.integrations?.softwares?.visualcare?.creds || null;
-
+    console.log("visual care creds", visualCareCreds)
     // console.log("unallocatedClients.length", unallocatedClients.length)
     const formatDateDMY = (dateStr) => {
         if (!dateStr) return "";
@@ -244,6 +253,7 @@ const SmartRostering = (props) => {
                     }
                     return {
                         dateOfService: shift.date_of_service || "-",
+                        shiftId: `${shift.client_id}_${shift.date_of_service}_${shift.start_time}`,
                         clientId: shift.client_id || "-",
                         name: shift.client_name || "Unknown",
                         sex: shift.sex || "-",
@@ -326,6 +336,26 @@ const SmartRostering = (props) => {
         }
     }, [screen]);
     // 🔹 Call backend rostering API (Controller 1)
+    const startBulkProcessing = () => {
+        const queue = unallocatedClients
+            .filter(c => selectedShiftIds.includes(c.shiftId))
+            .map(c => ({
+                id: c.shiftId,
+                client: c
+            }));
+
+        const results = {};
+        queue.forEach(q => {
+            results[q.id] = { status: "pending" };
+        });
+
+        setBulkQueue(queue);
+        setBulkResults(results);
+        setActiveTab(queue[0]?.id || null);
+        // setProcessingId(queue[0]?.id || null);
+        setScreen(2);
+    };
+
     const handleClientClick = async (client) => {
         setLoading(true);
         try {
@@ -376,6 +406,26 @@ const SmartRostering = (props) => {
         }
     };
 
+    const handleClientClickBulk = async (client) => {
+        const user = visualCareCreds?.user;
+        const key = visualCareCreds?.key;
+        const secret = visualCareCreds?.secret;
+
+        const inputs = {
+            client_id: client.clientId,
+            shift_date: client.dateOfService,
+            shift_start: client.startTime,
+            shift_minutes: client.minutes?.replace(" min", "") || 0,
+        };
+
+        const res = await axios.post(
+            `${API_BASE}/run-smart-rostering?user=${user}&key=${key}&secret=${secret}`,
+            { inputs, userEmail },
+            { headers: { "Content-Type": "application/json" } }
+        );
+
+        return res.data;
+    };
 
 
     const handleSubmit = async () => {
@@ -675,6 +725,60 @@ const SmartRostering = (props) => {
                         >
                             Unallocated Shifts
                         </h3>
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "10px",
+                                marginBottom: "16px",
+                                width: "184px",
+                                height: "44px",
+                                border: "1px solid #EEEEEE",
+                                borderRadius: "999px",
+                                marginLeft: "auto"
+                            }}
+                        >
+                            <span
+                                style={{
+                                    fontSize: "14px",
+                                    fontWeight: 500,
+                                    color: "#6B7280",
+                                    marginLeft: "16px"
+                                }}
+                            >
+                                Bulk Selection
+                            </span>
+
+                            <div
+                                onClick={() => {
+                                    setBulkMode(!bulkMode);
+                                    setSelectedShiftIds([]);
+                                }}
+                                style={{
+                                    width: "46px",
+                                    height: "24px",
+                                    borderRadius: "999px",
+                                    backgroundColor: bulkMode ? "#6C4CDC" : "#E5E7EB",
+                                    position: "relative",
+                                    cursor: "pointer",
+                                    transition: "background-color 0.25s ease"
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        width: "20px",
+                                        height: "20px",
+                                        borderRadius: "50%",
+                                        backgroundColor: "#fff",
+                                        position: "absolute",
+                                        top: "2px",
+                                        left: bulkMode ? "24px" : "2px",
+                                        transition: "left 0.25s ease",
+                                        boxShadow: "0 1px 3px rgba(0,0,0,0.25)"
+                                    }}
+                                />
+                            </div>
+                        </div>
 
                         {loadingClients ? (
                             <p>Loading unallocated shifts...</p>
@@ -712,6 +816,7 @@ const SmartRostering = (props) => {
                                                 <div
                                                     key={index}
                                                     style={{
+                                                        position: "relative",
                                                         flex: "0 0 300px",
                                                         border: "1px solid #6c4cdc",
                                                         borderRadius: "10px",
@@ -734,9 +839,35 @@ const SmartRostering = (props) => {
                                                         e.currentTarget.style.boxShadow =
                                                             "0 2px 6px rgba(0,0,0,0.08)";
                                                     }}
-                                                    onClick={() => handleClientClick(client)}
+                                                    onClick={() => {
+                                                        if (bulkMode) return;
+                                                        handleClientClick(client);
+                                                    }}
+
 
                                                 >
+                                                    {bulkMode && (
+                                                        <input
+                                                            type="checkbox"
+                                                            className="bulk-checkbox"
+                                                            checked={selectedShiftIds.includes(client.shiftId)}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            onChange={() => {
+                                                                setSelectedShiftIds(prev =>
+                                                                    prev.includes(client.shiftId)
+                                                                        ? prev.filter(id => id !== client.shiftId)
+                                                                        : [...prev, client.shiftId]
+                                                                );
+                                                            }}
+
+                                                            style={{
+                                                                position: "absolute",
+                                                                top: "10px",
+                                                                right: "10px"
+                                                            }}
+                                                        />
+                                                    )}
+
                                                     <p style={{ marginBottom: '12px' }}><strong>Date Of Service:</strong> {formatDateDMY(client.dateOfService)}</p>
                                                     <p style={{ marginBottom: '12px' }}><strong>Client ID:</strong> {client.clientId}</p>
                                                     <p style={{ marginBottom: '12px' }}><strong>Client Name:</strong> {client.name}</p>
@@ -804,10 +935,25 @@ const SmartRostering = (props) => {
                                         ›
                                     </button>
                                 </div>
+                                {bulkMode && selectedShiftIds.length > 0 && (
+                                    <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
+                                        <button
+                                            className="bulk-shortlist-btn"
+                                            onClick={startBulkProcessing}
+                                        >
+                                            <span style={{fontSize:"14px",fontWeight:"500"}}>Bulk Shortlist</span>
+                                            <span className="bulk-count">
+                                                {selectedShiftIds.length}
+                                            </span>
+                                        </button>
+                                    </div>
+                                )}
+
 
                             </>
                         )}
                     </div>}
+
 
 
 
@@ -844,6 +990,13 @@ const SmartRostering = (props) => {
                     visualCareCreds={visualCareCreds}
                     userEmail={userEmail}
                     SetIsSmartRosteringDetails={props.SetIsSmartRosteringDetails}
+                    bulkQueue={bulkQueue}
+                    setBulkQueue={setBulkQueue}
+                    bulkResults={bulkResults}
+                    setBulkResults={setBulkResults}
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    handleClientClickBulk={handleClientClickBulk}
                 />
             )}
             {screen === 3 && (
