@@ -51,13 +51,13 @@ const RosterDetails = ({ setScreen, rosteringResponse, API_BASE, selectedClient,
     }, [bulkQueue]);
     useEffect(() => {
         if (!bulkQueue) return;
-         if (bulkQueue.length === 0 && activeTab !== null) {
+        if (bulkQueue.length === 0 && activeTab !== null) {
             setActiveTab(null);
             setCurrentBulkResponse(null);
             setBulkResults({});
             setSelected([]);
 
-            setScreen(1); 
+            setScreen(1);
         }
     }, [bulkQueue]);
 
@@ -84,6 +84,12 @@ const RosterDetails = ({ setScreen, rosteringResponse, API_BASE, selectedClient,
         bulkQueue?.length && activeTab
             ? bulkQueue.find(q => q.id === activeTab)?.client ?? null
             : selectedClient ?? null;
+    // ✅ BULK TAB LOADING STATE
+    const activeBulkResult = bulkResults?.[activeTab];
+    const isBulkLoading =
+        bulkQueue?.length > 0 &&
+        activeTab &&
+        (!activeBulkResult || activeBulkResult.status === "processing");
 
     const clashingList = effectiveResponse?.preffered_worker_clashing_roster || [];
     useEffect(() => {
@@ -254,29 +260,23 @@ const RosterDetails = ({ setScreen, rosteringResponse, API_BASE, selectedClient,
                 clientData: {
                     // ✔ Correct client ID
                     ClientId: isManualResponse ? Date.now() : activeClient?.clientId,
-
                     // ✔ Correct name
                     PreferredName: activeClient?.name,
                     FirstName: activeClient?.name,
-
                     // ✔ Gender
                     Gender: activeClient?.sex,
-
                     // ✔ DOB (not available → null)
                     DateOfBirth: activeClient?.dob || null,
-
                     // ✔ Phone
                     Phone: normalizeAuPhone(activeClient?.phone),
+                    // Phone: normalizeInPhone("7020737478"),
                     Address1: activeClient?.address || "",
                     Address2: "",
-
                     Suburb: "",
                     State: "",
                     PostCode: "",
-
                     // ✔ Skills
                     prefSkillsDescription: activeClient?.prefSkillsDescription || [],
-
                     // ✔ Use selectedClient startTime + minutes
                     startTime: activeClient?.startTime,
                     minutes: parseInt(activeClient?.minutes) || request.minutes,
@@ -286,6 +286,7 @@ const RosterDetails = ({ setScreen, rosteringResponse, API_BASE, selectedClient,
                     staffId: s.id || s.staffId,
                     name: s.name,
                     phone: userEmail === "kris@curki.ai" ? normalizeAuPhone("419 015 351") : normalizeAuPhone(s?.phone),
+                    // phone: normalizeInPhone("7020737478"),
                     email: s.email,
                     gender: s.gender || s.sex,
                     location: s.location,
@@ -666,7 +667,11 @@ const RosterDetails = ({ setScreen, rosteringResponse, API_BASE, selectedClient,
                     Available Staff
                 </h3>
 
-                {rankedStaffState.length > 0 ? (
+                {isBulkLoading ? (
+                    <div className="center-loader">
+                        <div className="big-loader" />
+                    </div>
+                ) : rankedStaffState.length > 0 ? (
                     <div className="roster-staff-cards">
                         {rankedStaffState.map((staff, index) => (
                             <div
@@ -841,13 +846,10 @@ const RosterDetails = ({ setScreen, rosteringResponse, API_BASE, selectedClient,
                             </div>
                         ))}
                     </div>
-                ) : bulkResults[activeTab]?.status === "processing" ? (
-                    <div className="center-loader">
-                        <div className="big-loader" />
-                    </div>
                 ) : (
                     <p>No staff available for this shift.</p>
                 )}
+
             </div>
 
             {/* Preferred Worker Clashing Roster */}
