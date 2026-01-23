@@ -281,6 +281,7 @@ const RosterHistory = (props) => {
                         msg.includes("vacant shift") ||
                         msg.includes("shift is available") ||
                         msg.includes("please review") ||
+                        msg.includes("shift update") ||
                         isShiftConfirmed
                     );
 
@@ -778,7 +779,7 @@ const RosterHistory = (props) => {
                                 <FiUser size={22} color='#6c4cdc' />
                             </div>
 
-                            <div style={{ display: 'flex', flexDirection: "column", gap: '8px', marginTop: '6px',alignItems:"flex-start" }}>
+                            <div style={{ display: 'flex', flexDirection: "column", gap: '8px', marginTop: '6px', alignItems: "flex-start" }}>
                                 <div className="rostering-client-name">{c.name}</div>
                                 <div className="rostering-client-info"><FiMapPin /> {c.address}</div>
                                 <div className="rostering-client-info"><FiPhone /> {c.phone}</div>
