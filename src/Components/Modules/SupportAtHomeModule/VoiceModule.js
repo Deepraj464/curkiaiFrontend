@@ -33,6 +33,7 @@ import { GoArrowLeft } from "react-icons/go";
 import { FiEdit } from "react-icons/fi";
 import { FiCheck, FiX } from "react-icons/fi";
 import { GoPencil } from "react-icons/go";
+import TlcUploadBox from "../FinancialModule/TlcUploadBox";
 const VoiceModule = (props) => {
     const userEmail = props?.user?.email;
     const domain = userEmail?.split("@")[1] || "";
@@ -1705,142 +1706,34 @@ const VoiceModule = (props) => {
                         <>
                             <div className="voice-upload-row">
                                 {/* ================= TEMPLATE COLUMN ================= */}
-                                <div className="voice-upload-col">
-                                    <div className="voice-upload-title-admin">
-                                        Upload Templates*
-                                    </div>
-                                    {!templateFile && (
-                                        <div
-                                            className="voice-upload-box"
-                                            onClick={() =>
-                                                document.getElementById("voice-template").click()
-                                            }
-                                        >
-                                            <input
-                                                id="voice-template"
-                                                type="file"
-                                                accept=".doc"
-                                                hidden
-                                                onChange={(e) => {
-                                                    console.log("[UI] Template selected:", e.target.files[0]?.name);
-                                                    setTemplateFile(e.target.files[0]);
-                                                }}
-                                            />
-
-                                            <FiUploadCloud className="voice-icon" />
-                                            <div className="voice-text">Drop file or browse</div>
-                                            <div className="voice-subtext">Format: .doc only</div>
-
-                                            {/* <button className="voice-browse-btn">
-                                                Browse Files
-                                            </button> */}
-                                        </div>
-                                    )}
-
-
-                                    {templateFile && (
-                                        <div className="vm-file-list">
-                                            <div className="vm-file-item vm-file-item-uploaded">
-                                                <div className="vm-file-left">
-                                                    <div className="vm-file-icon">📄</div>
-
-                                                    <div>
-                                                        <div className="vm-file-name">
-                                                            {templateFile.name}
-                                                        </div>
-                                                        <div className="vm-file-status">
-                                                            Uploaded • 100%
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="vm-file-actions">
-                                                    <span className="vm-file-check">✓</span>
-                                                    <RiDeleteBin6Line
-                                                        className="vm-file-delete"
-                                                        onClick={() => setTemplateFile(null)}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                    )}
+                                <div className="voice-upload-col" style={{width:"35%"}}>
+                                    <TlcUploadBox
+                                        id="admin-template-upload"
+                                        title="Upload Templates*"
+                                        subtitle=".DOC, .DOCX"
+                                        accept=".doc,.docx"
+                                        files={templateFile ? [templateFile] : []}
+                                        multiple={false}
+                                        setFiles={(files) => {
+                                            setTemplateFile(files[0] || null);
+                                        }}
+                                    />
                                 </div>
+
 
                                 {/* ================= SAMPLES COLUMN ================= */}
-                                <div className="voice-upload-col">
-                                    <div className="voice-upload-title-admin">
-                                        Upload Samples
-                                    </div>
-
-                                    {sampleFiles.length === 0 && (
-                                        <div
-                                            className="voice-upload-box"
-                                            onClick={() =>
-                                                document.getElementById("voice-sample").click()
-                                            }
-                                        >
-                                            <input
-                                                id="voice-sample"
-                                                type="file"
-                                                accept=".doc,.pdf"
-                                                multiple
-                                                hidden
-                                                onChange={(e) => {
-                                                    const files = Array.from(e.target.files);
-                                                    console.log("[UI] Samples selected:", files.map(f => f.name));
-                                                    setSampleFiles(files);
-                                                }}
-                                            />
-
-                                            <FiUploadCloud className="voice-icon" />
-                                            <div className="voice-text">Drop file or browse</div>
-                                            <div className="voice-subtext">
-                                                Format: .doc or .pdf only
-                                            </div>
-
-                                            {/* <button className="voice-browse-btn">
-                                                Browse Files
-                                            </button> */}
-                                        </div>
-                                    )}
-
-                                    {sampleFiles.length > 0 && (
-                                        <div className="vm-file-list">
-                                            {sampleFiles.map((file, index) => (
-                                                <div key={index} className="vm-file-item vm-file-item-uploaded">
-                                                    <div className="vm-file-left">
-                                                        <div className="vm-file-icon">📄</div>
-
-                                                        <div>
-                                                            <div className="vm-file-name">
-                                                                {file.name}
-                                                            </div>
-                                                            <div className="vm-file-status">
-                                                                Uploaded • 100%
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="vm-file-actions">
-                                                        <span className="vm-file-check">✓</span>
-
-                                                        <RiDeleteBin6Line
-                                                            className="vm-file-delete"
-                                                            onClick={() => {
-                                                                console.log("[UI] Sample removed:", file.name);
-                                                                setSampleFiles(prev =>
-                                                                    prev.filter((_, i) => i !== index)
-                                                                );
-                                                            }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-
-                                    )}
+                                <div className="voice-upload-col" style={{width:"35%"}}>
+                                    <TlcUploadBox
+                                        id="admin-sample-upload"
+                                        title="Upload Samples"
+                                        subtitle=".DOC, .PDF"
+                                        accept=".doc,.docx,.pdf"
+                                        files={sampleFiles}
+                                        multiple
+                                        setFiles={setSampleFiles}
+                                    />
                                 </div>
+
                             </div>
 
                             {/* Save & Analyze Button */}
@@ -2182,78 +2075,21 @@ const VoiceModule = (props) => {
                     </div>
 
                     <div className="voice-upload-col">
-                        <div className="voice-title">Upload Transcript</div>
+                        <TlcUploadBox
+                            id="staff-transcript-upload"
+                            title="Upload Transcript"
+                            subtitle=".DOC, .PDF, .TXT"
+                            accept=".doc,.docx,.pdf,.txt"
+                            files={uploadedTranscriptFiles}
+                            multiple
+                            setFiles={(files) => {
+                                setUploadedTranscriptFiles(files);
+                                setTranscriptSource("file");
+                                setCurrentTranscriptIndex(0);
+                            }}
+                        />
 
-                        <div className="voice-subtext">
-                            Upload single transcript or folder of transcripts
-                        </div>
-
-                        {/* UPLOAD BOX */}
-                        {uploadedTranscriptFiles.length === 0 && (
-                            <div
-                                className="voice-upload-box"
-                                onClick={() => transcriptInputRef.current?.click()}
-                            >
-                                <input
-                                    ref={transcriptInputRef}
-                                    id="staff-transcript"
-                                    type="file"
-                                    accept=".doc,.pdf,.txt"
-                                    multiple
-                                    hidden
-                                    onChange={(e) => {
-                                        const selectedFiles = Array.from(e.target.files);
-                                        if (!selectedFiles.length) return;
-
-                                        setUploadedTranscriptFiles(selectedFiles);
-                                        setTranscriptSource("file");
-                                        setCurrentTranscriptIndex(0);
-                                        e.target.value = "";
-                                    }}
-                                />
-
-                                <FiUploadCloud className="voice-icon" />
-                                <div className="voice-text">Drop file or browse</div>
-                                <div className="voice-subtext">
-                                    Format: .doc, .pdf, .txt
-                                </div>
-                            </div>
-                        )}
-
-                        {/* FILE LIST */}
-                        {uploadedTranscriptFiles.length > 0 && (
-                            <div className="vm-file-list" style={{ marginTop: "12px" }}>
-                                {uploadedTranscriptFiles.map((file, index) => (
-                                    <div
-                                        key={index}
-                                        className="vm-file-item vm-file-item-uploaded"
-                                    >
-                                        <div className="vm-file-left">
-                                            <div className="vm-file-icon">📄</div>
-                                            <div>
-                                                <div className="vm-file-name">{file.name}</div>
-                                                <div className="vm-file-status">Ready</div>
-                                            </div>
-                                        </div>
-
-                                        <div className="vm-file-actions">
-                                            <span className="vm-file-check">✓</span>
-                                            <RiDeleteBin6Line
-                                                className="vm-file-delete"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setUploadedTranscriptFiles(prev =>
-                                                        prev.filter((_, i) => i !== index)
-                                                    );
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* GENERATE DOCUMENT BUTTON */}
+                        {/* ✅ GENERATE DOCUMENT BUTTON (PUT BACK) */}
                         <div style={{ textAlign: "right", marginTop: "24px" }}>
                             <button
                                 className="staff-primary"
@@ -2275,6 +2111,8 @@ const VoiceModule = (props) => {
                             </button>
                         </div>
                     </div>
+
+
 
 
 
@@ -2340,7 +2178,9 @@ const VoiceModule = (props) => {
 
                                             <div className="template-select-info">
                                                 <div className="template-select-name">
-                                                    {tpl.templateName || "Voice Template"}
+                                                    {(tpl.templateName || "Voice Template").length > 30
+                                                        ? (tpl.templateName || "Voice Template").slice(0, 30) + "..."
+                                                        : (tpl.templateName || "Voice Template")}
                                                 </div>
                                                 <div className="template-select-date">
                                                     ⏱ {timeAgo(tpl.createdAt)}
