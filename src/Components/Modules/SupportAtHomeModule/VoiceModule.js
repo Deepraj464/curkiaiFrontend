@@ -609,7 +609,10 @@ const VoiceModule = (props) => {
 
     const acceptRecording = async () => {
         if (!audioBlob) return;
-
+        if (recordTime < 10) {
+            alert("Audio must be at least 10 seconds long.");
+            return;
+        }
         try {
             if (platformType !== "web") {
 
