@@ -7,7 +7,8 @@ import pricingExampleIcon from "../Images/PricingExampleIcon.svg"
 import pricingTooltip from "../Images/pricingTooltipIcon.svg"
 import pricingExample from "../Images/newPricingExample.svg"
 import ausDollar from "../Images/AusDollar.svg"
-const PricingPlansModal = ({ onClose, email: userEmail, firstName: firstName, setSubscriptionInfo }) => {
+import { toast, ToastContainer } from "react-toastify";
+const PricingPlansModal = ({ onClose, email: userEmail, firstName: firstName, setSubscriptionInfo, isAdmin, adminDetails }) => {
     console.log("User Email:", userEmail); // For debugging
     const [billing, setBilling] = useState("monthly");
     const [showCompare, setShowCompare] = useState(false);
@@ -75,7 +76,7 @@ const PricingPlansModal = ({ onClose, email: userEmail, firstName: firstName, se
                         Indicative provider saving $1.2M+/Year
                     </div>
 
-                  
+
                 </div>
 
                 <div className="command-right">
@@ -92,6 +93,7 @@ const PricingPlansModal = ({ onClose, email: userEmail, firstName: firstName, se
     };
     return (
         <div className="pricing-overlay">
+            <ToastContainer position="top-right" />
             <div className="pricing-container">
                 {/* Top bar */}
                 {/* <div className="pricing-top">
@@ -184,6 +186,8 @@ const PricingPlansModal = ({ onClose, email: userEmail, firstName: firstName, se
                         onClose={onClose}
                         firstName={firstName}
                         setSubscriptionInfo={setSubscriptionInfo}
+                        isAdmin={isAdmin}
+                        adminDetails={adminDetails}
                     />
 
                     <Plan
@@ -208,6 +212,8 @@ const PricingPlansModal = ({ onClose, email: userEmail, firstName: firstName, se
                         onClose={onClose}
                         firstName={firstName}
                         setSubscriptionInfo={setSubscriptionInfo}
+                        isAdmin={isAdmin}
+                        adminDetails={adminDetails}
                     />
 
                     <Plan
@@ -234,6 +240,8 @@ const PricingPlansModal = ({ onClose, email: userEmail, firstName: firstName, se
                         onClose={onClose}
                         firstName={firstName}
                         setSubscriptionInfo={setSubscriptionInfo}
+                        isAdmin={isAdmin}
+                        adminDetails={adminDetails}
                     />
 
                 </div>
@@ -339,7 +347,7 @@ const Plan = ({ title,
     userEmail,
     onClose,
     firstName,
-    setSubscriptionInfo, highlighted, badge }) => {
+    setSubscriptionInfo, highlighted, badge, isAdmin, adminDetails }) => {
     const price = billing === "monthly" ? monthly : yearly;
     const formatPrice = (value) => {
         if (!value) return value;
@@ -353,7 +361,7 @@ const Plan = ({ title,
     };
 
     const tooltipContent = tooltipContentMap[planKey] || "";
-     
+
     const startTrial = async () => {
         try {
             // 1️⃣ Start trial in your system
@@ -465,8 +473,8 @@ const Plan = ({ title,
                         </li>
                     );
                 })}
-                
-                {saving  && (
+
+                {saving && (
                     <div className="saving-badge-container" >
                         <div className="saving-badge">
                             Indicative provider saving {saving}
@@ -511,6 +519,12 @@ const Plan = ({ title,
                             }
                             onClick={(e) => {
                                 e.stopPropagation();
+
+                                if (!isAdmin) {
+                                    toast.error(`Only admins can manage billing & subscriptions, Please contact ${adminDetails.email}.`);
+                                    return;
+                                }
+
                                 onCheckout({ planKey });
                             }}
                         >

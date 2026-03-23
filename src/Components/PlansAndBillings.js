@@ -8,9 +8,10 @@ import pricingTooltip from "../Images/pricingTooltipIcon.svg"
 import pricingExample from "../Images/newPricingExample.svg"
 import ausDollar from "../Images/AusDollar.svg"
 import crossIcon from "../Images/ComparePriceCross.png"
-const PlansAndBillings = ({ onClose, email: userEmail, firstName: firstName, setSubscriptionInfo, subscriptionInfo }) => {
-    console.log("User Email:", userEmail);
-    console.log("Subscription Info:", subscriptionInfo);
+import { toast, ToastContainer } from "react-toastify";
+const PlansAndBillings = ({ onClose, email: userEmail, firstName: firstName, setSubscriptionInfo, subscriptionInfo, isAdmin, setIsAdmin, adminDetails, setAdminDetails }) => {
+    // console.log("User Email:", userEmail);
+    // console.log("Subscription Info:", subscriptionInfo);
     const [billing, setBilling] = useState("monthly");
     const [showCompare, setShowCompare] = useState(false);
     const currentPlan = subscriptionInfo?.plan_key || "trial";
@@ -94,6 +95,7 @@ const PlansAndBillings = ({ onClose, email: userEmail, firstName: firstName, set
     };
     return (
         <div className="pb-overlay">
+            <ToastContainer position="top-right" />
             <div className="pb-container">
                 {/* Top bar */}
                 <div className="pb-top">
@@ -188,6 +190,8 @@ const PlansAndBillings = ({ onClose, email: userEmail, firstName: firstName, set
                         setSubscriptionInfo={setSubscriptionInfo}
                         currentPlan={currentPlan}
                         currentBilling={currentBilling}
+                        isAdmin={isAdmin}
+                        adminDetails={adminDetails}
                     />
 
                     <Plan
@@ -214,6 +218,8 @@ const PlansAndBillings = ({ onClose, email: userEmail, firstName: firstName, set
                         setSubscriptionInfo={setSubscriptionInfo}
                         currentPlan={currentPlan}
                         currentBilling={currentBilling}
+                        isAdmin={isAdmin}
+                        adminDetails={adminDetails}
                     />
 
                     <Plan
@@ -242,6 +248,8 @@ const PlansAndBillings = ({ onClose, email: userEmail, firstName: firstName, set
                         setSubscriptionInfo={setSubscriptionInfo}
                         currentPlan={currentPlan}
                         currentBilling={currentBilling}
+                        isAdmin={isAdmin}
+                        adminDetails={adminDetails}
                     />
 
                 </div>
@@ -347,7 +355,7 @@ const Plan = ({ title,
     userEmail,
     onClose,
     firstName,
-    setSubscriptionInfo, highlighted, badge, currentPlan, currentBilling }) => {
+    setSubscriptionInfo, highlighted, badge, currentPlan, currentBilling, isAdmin, adminDetails }) => {
     const PLAN_ORDER = {
         trial: 0,
         start: 1,
@@ -355,8 +363,8 @@ const Plan = ({ title,
         thrive: 3,
         command: 4
     };
-    console.log("PLAN_ORDER[planKey]", PLAN_ORDER[planKey])
-    console.log("PLAN_ORDER[currentPlan]", PLAN_ORDER[currentPlan])
+    // console.log("PLAN_ORDER[planKey]", PLAN_ORDER[planKey])
+    // console.log("PLAN_ORDER[currentPlan]", PLAN_ORDER[currentPlan])
     const isSamePlan = PLAN_ORDER[planKey] === PLAN_ORDER[currentPlan];
     const isSameBilling = billing === currentBilling;
 
@@ -382,8 +390,9 @@ const Plan = ({ title,
             isDowngrade = true;
         }
     }
-    console.log("isUpgrade", isUpgrade);
-    console.log("isCurrentPlan", isCurrentPlan);
+    // console.log("isUpgrade", isUpgrade);
+    // console.log("isCurrentPlan", isCurrentPlan);
+    // console.log("admin details", adminDetails)
     const price = billing === "monthly" ? monthly : yearly;
     const [loading, setLoading] = useState(false);
     const handlePlanChange = async () => {
@@ -421,7 +430,7 @@ const Plan = ({ title,
                 return;
             }
 
-            console.log("Plan updated", data);
+            // console.log("Plan updated", data);
 
             setSubscriptionInfo((prev) => ({
                 ...prev,
@@ -465,7 +474,7 @@ const Plan = ({ title,
                 return;
             }
             const data = await res.json();
-            console.log("Trial started:", data);
+            // console.log("Trial started:", data);
             setSubscriptionInfo({
                 subscription_type: "trial",
                 trial_end: data?.trial?.trial_end,
@@ -606,6 +615,11 @@ const Plan = ({ title,
                             disabled={isCurrentPlan}
                             onClick={(e) => {
                                 e.stopPropagation();
+
+                                if (isAdmin === false) {
+                                    toast.error(`Only admins can manage billing & subscriptions, Please contact ${adminDetails.email}.`);
+                                    return;
+                                }
 
                                 if (isUpgrade || isDowngrade) {
                                     handlePlanChange();
