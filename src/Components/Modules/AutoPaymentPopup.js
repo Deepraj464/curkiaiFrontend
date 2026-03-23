@@ -1,17 +1,23 @@
 import React, { useState } from "react";
 import "../../Styles/AutoPaymentPopup.css";
 import autoPaymentGif from "../../Images/autopaymentPopup.gif";
+import { toast, ToastContainer } from "react-toastify";
 
 const API_BASE =
   "https://curki-test-prod-auhyhehcbvdmh3ef.canadacentral-01.azurewebsites.net";
 
-const AutoPaymentPopup = ({ onClose, userEmail }) => {
+const AutoPaymentPopup = ({ onClose, userEmail, isAdmin, adminDetails }) => {
   const [loading, setLoading] = useState(false);
-  
+
   const handleProceedTopup = async () => {
     try {
       console.log("[AutoPaymentPopup] Proceed topup clicked");
-
+      if (isAdmin === false) {
+        toast.error(
+          `Only admins can manage billing. Contact ${adminDetails?.name || ""} (${adminDetails?.email || ""})`
+        );
+        return;
+      }
       setLoading(true);
 
       const response = await fetch(`${API_BASE}/api/trigger-autopayment`, {
@@ -54,6 +60,7 @@ const AutoPaymentPopup = ({ onClose, userEmail }) => {
 
   return (
     <div className="autopay-overlay">
+      <ToastContainer position="top-right" />
       <div className="autopay-popup">
 
         <div className="autopay-icon">
