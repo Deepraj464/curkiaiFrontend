@@ -126,6 +126,8 @@ const HomePage = () => {
   const [tlcPayrollAskAiConversationHistory, setTlcPayrollAskAiConversationHistory] = useState([]);
   const [isListening, setIsListening] = useState(false);
   const [isSTTActive, setIsSTTActive] = useState(false);
+  let [isAdmin, setIsAdmin] = useState(false);
+  const [adminDetails,setAdminDetails] = useState({})
   const recognizerRef = useRef(null);
   const handleModalOpen = () => setModalVisible(true);
   const handleModalClose = () => setModalVisible(false);
@@ -148,6 +150,26 @@ const HomePage = () => {
 
   const isTlcDomainUser = tlcDomains.includes(userDomain);
   const isDemoUser = userEmail === "kris@curki.ai";
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (!user?.email) return;
+
+      try {
+        const res = await fetch(
+          `https://curki-test-prod-auhyhehcbvdmh3ef.canadacentral-01.azurewebsites.net/api/user/get?userEmail=${encodeURIComponent(user.email)}`
+        );
+
+        const data = await res.json();
+        console.log("data",data)
+        setIsAdmin(data?.isAdmin === true);
+        setAdminDetails(data?.admin)
+      } catch (err) {
+        console.error("Error fetching user role:", err);
+      }
+    };
+
+    fetchUserRole();
+  }, [user]);
   const handleMicClick = async () => {
     try {
 
@@ -806,7 +828,7 @@ const HomePage = () => {
         <>
           {showPricingModal ? (
             // <PricingModal onClose={() => setShowPricingModal(false)} email={user?.email} />
-            <PricingPlansModal onClose={() => setShowPricingModal(false)} email={user?.email} firstName={user?.displayName} setSubscriptionInfo={setSubscriptionInfo} />
+            <PricingPlansModal onClose={() => setShowPricingModal(false)} email={user?.email} firstName={user?.displayName} setSubscriptionInfo={setSubscriptionInfo} isAdmin={isAdmin} adminDetails={adminDetails}/>
           ) : (
             <div className="page-container">
               {!isMobileOrTablet && sidebarVisible && (
@@ -1580,10 +1602,12 @@ const HomePage = () => {
         )
       }
       {
-        showAutoPaymentPopup && !blockedAutoTopupDomains.includes(userDomain) &&(
+        showAutoPaymentPopup && !blockedAutoTopupDomains.includes(userDomain) && (
           <AutoPaymentPopup
             userEmail={user?.email}
             onClose={() => setShowAutoPaymentPopup(false)}
+            isAdmin={isAdmin}
+            adminDetails={adminDetails}
           />
         )
       }
@@ -1595,6 +1619,10 @@ const HomePage = () => {
             firstName={user?.displayName}
             setSubscriptionInfo={setSubscriptionInfo}
             subscriptionInfo={subscriptionInfo}
+            isAdmin={isAdmin}
+            setIsAdmin={setIsAdmin}
+            adminDetails={adminDetails}
+            setAdminDetails={setAdminDetails}
           />
         )
       }
