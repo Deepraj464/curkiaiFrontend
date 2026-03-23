@@ -408,3 +408,9 @@ color: #656565;
   color: #656565;
   line-height: 1.4;
 }
+.incident-dashboard-source-item p,
+.incident-dashboard-source-item h5 {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
