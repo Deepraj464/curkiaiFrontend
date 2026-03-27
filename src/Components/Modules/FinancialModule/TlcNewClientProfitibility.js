@@ -81,6 +81,7 @@ const TlcNewClientProfitability = (props) => {
 
     const userEmail = user?.email;
     // const userEmail = "gjavier@tenderlovingcaredisability.com.au"
+    // const userEmail = "mtalukder@tenderlovingcaredisability.com.au"
     // const userEmail = "bastruc@tenderlovingcaredisability.com.au"
     // const userEmail = "amera@tenderlovingcare.com.au";
     // const userEmail = "lcowell@tenderlovingcare.com.au"
@@ -741,13 +742,23 @@ const TlcNewClientProfitability = (props) => {
 
         try {
             updateTab({ saving: true });
-
+            // console.log("startDate in save history", startDate.toISOString())
+            // console.log("endDate in save history", endDate.toISOString())
             const payload = {
                 email: userEmail,
                 responseData: activeTabData.responseData,
                 filters: {
-                    start: startDate ? startDate.toISOString() : null,
-                    end: endDate ? endDate.toISOString() : null,
+                    start: startDate
+                        ? startDate.getFullYear() + "-" +
+                        String(startDate.getMonth() + 1).padStart(2, "0") + "-" +
+                        String(startDate.getDate()).padStart(2, "0")
+                        : null,
+
+                    end: endDate
+                        ? endDate.getFullYear() + "-" +
+                        String(endDate.getMonth() + 1).padStart(2, "0") + "-" +
+                        String(endDate.getDate()).padStart(2, "0")
+                        : null,
                     state: activeTabData.selectedState.map(s => s.value).join(", "),
                     department: activeTabData.selectedDepartment.map(d => d.value).join(", "),
                     role: activeTabData.selectedRole.map(r => r.value).join(", "),
