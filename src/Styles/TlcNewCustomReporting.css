@@ -391,7 +391,9 @@ body {
     width: 100%;
     padding: 20px;
 }
-
+.charts-grid-payroll.no-padding {
+    padding: 0 !important;
+}
 .chart-box {
     background: #ffffff;
     border-radius: 10px;
