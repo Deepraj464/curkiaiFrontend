@@ -768,7 +768,7 @@ const TlcNewClientProfitability = (props) => {
 
                     const statusData = await statusRes.json();
 
-                    console.log("JOB STATUS:", statusData);
+                    // console.log("JOB STATUS:", statusData);
 
                     if (statusData.status === "completed") {
                         clearInterval(pollInterval);
