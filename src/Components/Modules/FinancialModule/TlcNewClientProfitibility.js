@@ -129,7 +129,10 @@ const TlcNewClientProfitability = (props) => {
                         const rangeEnd = new Date(range.End);
 
                         // Check if history date range is within search range
-                        const datesMatch = historyStart >= rangeStart && historyEnd <= rangeEnd;
+                        const datesMatch = !(
+                            historyEnd < rangeStart ||
+                            historyStart > rangeEnd
+                        );
                         if (!datesMatch) matches = false;
                     }
 
@@ -1501,7 +1504,7 @@ const TlcNewClientProfitability = (props) => {
                                 }
                             }}
                         />
-                        <button
+                        {/* <button
                             onClick={handleSearch}
                             disabled={searching}
                             style={{
@@ -1537,7 +1540,7 @@ const TlcNewClientProfitability = (props) => {
                             ) : (
                                 "Search"
                             )}
-                        </button>
+                        </button> */}
                         {searchMode && (
                             <button
                                 onClick={() => {
