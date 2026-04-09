@@ -444,8 +444,8 @@ const HomePage = () => {
         alert("No documents available");
         return;
       }
-      console.log("careVoiceFiles", careVoiceFiles);
-      setIsStartingSession(true); // ✅ START LOADING
+      // console.log("careVoiceFiles", careVoiceFiles);
+      setIsStartingSession(true); 
 
       const formData = new FormData();
       formData.append("firebaseUid", user?.uid);
