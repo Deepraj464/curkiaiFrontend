@@ -67,7 +67,12 @@ import PlansAndBillings from "./PlansAndBillings";
 import chatBotKeyIcon from "../Images/chatBoyKeyIcon.svg"
 import apiTutorialsIcon from "../Images/apiTutorialKeyIcon.svg"
 import { startSpeechRecognition, stopSpeechRecognition } from "./AskAiSTT";
+import { SlLike, SlDislike } from "react-icons/sl";
 import { LuSpeech } from "react-icons/lu";
+import { FaThumbsUp, FaThumbsDown } from "react-icons/fa";
+import { FiFileText } from "react-icons/fi";
+import { IoChevronForward, IoChevronDown } from "react-icons/io5";
+import { BiDislike, BiLike, BiSolidDislike, BiSolidLike } from "react-icons/bi";
 const HomePage = () => {
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [documentString, setDocumentString] = useState("");
@@ -99,6 +104,7 @@ const HomePage = () => {
   const isHRAskAiPage = selectedRole === "Smart Onboarding (Staff)";
   const isSoftwareConnectPage = selectedRole === "Connect Your Systems";
   const isNewFinancialModule = selectedRole === "Financial Health";
+  const isCareVoicePage = selectedRole === "Care Voice";
   const [tlcClientProfitabilityPayload, setTlcClientProfitabilityPayload] = useState(null);
   const [Suggestions, setSuggestions] = useState([]);
   const [chatbotRules, setChatbotRules] = useState([]);
@@ -128,11 +134,22 @@ const HomePage = () => {
   const [isSTTActive, setIsSTTActive] = useState(false);
   let [isAdmin, setIsAdmin] = useState(false);
   const [adminDetails, setAdminDetails] = useState({})
+  const [careVoiceSessionId, setCareVoiceSessionId] = useState(null);
+  const [careVoiceUserId, setCareVoiceUserId] = useState(null);
+  const [careVoiceStarted, setCareVoiceStarted] = useState(false);
+  const [careVoiceFiles, setCareVoiceFiles] = useState([]);
+  const [showSourceModal, setShowSourceModal] = useState(false);
+  const [selectedSources, setSelectedSources] = useState([]);
+  const [isStartingSession, setIsStartingSession] = useState(false);
+  const [expandedSource, setExpandedSource] = useState(null);
+  const [feedbackState, setFeedbackState] = useState({});
   const recognizerRef = useRef(null);
   const handleModalOpen = () => setModalVisible(true);
   const handleModalClose = () => setModalVisible(false);
   const handleLeftModalOpen = () => setLeftModalVisible(true);
   const handleLeftModalClose = () => setLeftModalVisible(false);
+  const [feedbackMode, setFeedbackMode] = useState(null);
+  // { index, message }
   // console.log("user?.email",user?.email)
   const userEmail = user?.email;
   // const userEmail = "kris@curki.ai";
@@ -150,6 +167,87 @@ const HomePage = () => {
 
   const isTlcDomainUser = tlcDomains.includes(userDomain);
   const isDemoUser = userEmail === "kris@curki.ai";
+  const handleFeedbackClick = (index, type) => {
+    const key = `${selectedRole}_${index}`;
+
+    setFeedbackState((prev) => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        type,
+        showInput: type === "down",
+      }
+    }));
+  };
+  const submitFeedback = async (index, message, type, feedbackText = "") => {
+    const key = `${selectedRole}_${index}`;
+    try {
+      const data = feedbackState[key] || {};
+      setFeedbackState((prev) => ({
+        ...prev,
+        [key]: { ...prev[key], submitting: true }
+      }));
+
+      await fetch("https://curki-test-prod-auhyhehcbvdmh3ef.canadacentral-01.azurewebsites.net/api/askAiFeedback/shareFeedback", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          firebaseUid: user?.uid,
+          userEmail: user?.email,
+          message,
+          feedbackType: type,
+          feedbackText: feedbackText
+        })
+      });
+
+      setFeedbackState((prev) => ({
+        ...prev,
+        [key]: {
+          ...prev[key],
+          submitting: false,
+          submitted: true
+        }
+      }));
+
+    } catch (err) {
+      console.error("Feedback error:", err);
+
+      setFeedbackState((prev) => ({
+        ...prev,
+        [key]: {
+          ...prev[key],
+          submitting: false
+        }
+      }));
+    }
+  };
+  useEffect(() => {
+    const handleTabClose = () => {
+      if (!careVoiceSessionId || !careVoiceUserId) return;
+
+      const url =
+        "https://curki-test-prod-auhyhehcbvdmh3ef.canadacentral-01.azurewebsites.net/api/careVoiceAskAI/delete-session";
+
+      const payload = JSON.stringify({
+        session_id: careVoiceSessionId,
+        user_id: careVoiceUserId,
+      });
+
+      const blob = new Blob([payload], { type: "application/json" });
+
+      navigator.sendBeacon(url, blob);
+
+      // console.log("Delete session called on tab close");
+    };
+
+    window.addEventListener("beforeunload", handleTabClose);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleTabClose);
+    };
+  }, [careVoiceSessionId, careVoiceUserId]);
   useEffect(() => {
     const fetchUserRole = async () => {
       if (!user?.email) return;
@@ -160,7 +258,7 @@ const HomePage = () => {
         );
 
         const data = await res.json();
-        console.log("data", data)
+        // console.log("data", data)
         setIsAdmin(data?.isAdmin === true);
         setAdminDetails(data?.admin)
       } catch (err) {
@@ -182,7 +280,7 @@ const HomePage = () => {
 
         recognizerRef.current = await startSpeechRecognition((text) => {
 
-          console.log("Speech text received:", text);
+          // console.log("Speech text received:", text);
 
           if (textareaRef.current) {
             textareaRef.current.value = text;
@@ -396,11 +494,106 @@ const HomePage = () => {
     }
   };
 
+  const getUniqueSources = (sources = []) => {
+    const unique = new Set();
+    return sources.filter((s) => {
+      if (unique.has(s.document_name)) return false;
+      unique.add(s.document_name);
+      return true;
+    });
+  };
+  const startCareVoiceSession = async () => {
+    try {
+      if (!careVoiceFiles.length) {
+        alert("No documents available");
+        return;
+      }
+      // console.log("careVoiceFiles", careVoiceFiles);
+      setIsStartingSession(true);
 
+      const formData = new FormData();
+      formData.append("firebaseUid", user?.uid);
+      const session_id = `session_${Date.now()}`;
+      formData.append("session_id", session_id);
 
+      const filteredFiles = careVoiceFiles.filter(file =>
+        !file.type.startsWith("audio/") &&
+        !file.type.startsWith("video/")
+      );
+
+      filteredFiles.forEach((file) => {
+        formData.append("documents", file);
+      });
+
+      const res = await fetch(
+        "https://curki-test-prod-auhyhehcbvdmh3ef.canadacentral-01.azurewebsites.net/api/careVoiceAskAI/start",
+        {
+          method: "POST",
+          body: formData
+        }
+      );
+
+      const data = await res.json();
+
+      if (!data.success) throw new Error("Start failed");
+
+      setCareVoiceSessionId(data.data.session_id);
+      setCareVoiceUserId(data.user_id);
+      setCareVoiceStarted(true);
+
+    } catch (err) {
+      console.error("Start session failed", err);
+    } finally {
+      setIsStartingSession(false); // ✅ STOP LOADING
+    }
+  };
 
 
   const handleSend = async (customText, eventName = null) => {
+    // 🚨 FEEDBACK MODE HANDLER (ADD THIS AT TOP)
+    if (feedbackMode) {
+      const rawQuery =
+        typeof customText === "string"
+          ? customText
+          : inputRef.current || "";
+
+      const feedbackText = rawQuery.trim();
+      if (!feedbackText) return;
+
+      const key = `${selectedRole}_${feedbackMode.index}`;
+
+      try {
+        // ✅ CALL YOUR EXISTING API FUNCTION
+        await submitFeedback(
+          feedbackMode.index,
+          feedbackMode.message,
+          "down",
+          feedbackText
+        );
+
+        // ✅ SAVE FEEDBACK TEXT
+        setFeedbackState((prev) => ({
+          ...prev,
+          [key]: {
+            ...prev[key],
+            text: feedbackText,
+            submitted: true
+          }
+        }));
+
+      } catch (err) {
+        console.error("Feedback error:", err);
+      }
+
+      // ✅ RESET MODE
+      setFeedbackMode(null);
+
+      // ✅ CLEAR INPUT
+      if (textareaRef.current) textareaRef.current.value = "";
+      inputRef.current = "";
+
+      return;
+    }
     const rawQuery =
       typeof customText === "string"
         ? customText
@@ -423,6 +616,64 @@ const HomePage = () => {
     }
 
     try {
+      if (isCareVoicePage) {
+        if (!careVoiceStarted) {
+          alert("Please start session first");
+
+          setMessages(prev =>
+            prev.map(msg =>
+              msg.temp
+                ? { sender: "bot", text: "Please start Care Voice session first." }
+                : msg
+            )
+          );
+
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            "https://curki-test-prod-auhyhehcbvdmh3ef.canadacentral-01.azurewebsites.net/api/careVoiceAskAI/query",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                session_id: careVoiceSessionId,
+                user_id: careVoiceUserId,
+                query: finalQuery
+              })
+            }
+          );
+
+          const data = await response.json();
+          console.log("Care Voice Query Response:", data);
+          const botReply = data?.data?.answer || "No response";
+          const sources = data?.data?.sources || [];
+
+          setMessages(prev =>
+            prev.map(msg =>
+              msg.temp
+                ? { sender: "bot", text: botReply, sources }
+                : msg
+            )
+          );
+
+        } catch (err) {
+          console.error("Care Voice AskAI Error:", err);
+
+          setMessages(prev =>
+            prev.map(msg =>
+              msg.temp
+                ? { sender: "bot", text: "Care Voice Ask AI failed." }
+                : msg
+            )
+          );
+        }
+
+        return;
+      }
       //SMART ROSTERING MODE
       //ASK-AI FOR RESUME ZIP (Smart Onboarding / HR Module)
       //SOFTWARE CONNECT CHATBOT (Dialogflow)
@@ -621,7 +872,7 @@ const HomePage = () => {
             prev.map(msg => (msg.temp ? { sender: "bot", text: botReply } : msg))
           );
 
-          // ✅ Update history with your own messages + new response
+          //Update history with your own messages + new response
           const updatedHistory = [
             ...cleanHistory,
             { role: 'assistant', content: botReply }
@@ -778,7 +1029,7 @@ const HomePage = () => {
     else if (isSoftwareConnectPage) {
       setSuggestions(moduleSuggestions.softWareConnect);
     }
-    else if (isNewFinancialModule) {   
+    else if (isNewFinancialModule) {
       setSuggestions(moduleSuggestions.financial);
     }
     else {
@@ -790,6 +1041,10 @@ const HomePage = () => {
     setMessages([]);
     setFinancialAiHistoryPayload([]);
     setClientProfitabilityAiHistoryPayload([]);
+    setCareVoiceSessionId(null);
+    setCareVoiceUserId(null);
+    setCareVoiceStarted(false);
+    setCareVoiceFiles([]);
     // clear textarea safely
     if (textareaRef.current) {
       textareaRef.current.value = "";
@@ -874,7 +1129,7 @@ const HomePage = () => {
                 />
               )}
 
-              <div style={{ flex: 1, height: "100vh", overflowY: "auto",scrollbarWidth:'none' }}>
+              <div style={{ flex: 1, height: "100vh", overflowY: "auto", scrollbarWidth: 'none' }}>
                 <div
                   className="typeofreportmaindiv"
                   style={{
@@ -1126,7 +1381,7 @@ const HomePage = () => {
                         <Afr selectedRole="Annual Financial Reporting" handleClick={handleClick} setShowFeedbackPopup={setShowFeedbackPopup} />
                       </div>
 
-                      <div style={{ display: selectedRole === "Custom Incident Management" ? "block" : "none" ,padding:'24px 4%'}}>
+                      <div style={{ display: selectedRole === "Custom Incident Management" ? "block" : "none", padding: '24px 4%' }}>
                         <IncidentManagement selectedRole="Custom Incident Management" handleClick={handleClick} setShowFeedbackPopup={setShowFeedbackPopup} />
                       </div>
 
@@ -1154,7 +1409,7 @@ const HomePage = () => {
                         <HRAnalysis handleClick={handleClick} selectedRole="Smart Onboarding (Staff)" setShowFeedbackPopup={setShowFeedbackPopup} user={user} setManualResumeZip={setManualResumeZip} />
                       </div>
                       <div style={{ display: selectedRole === "Care Voice" ? "block" : "none" }}>
-                        <VoiceModule user={user} isMobileOrTablet={isMobileOrTablet} />
+                        <VoiceModule user={user} isMobileOrTablet={isMobileOrTablet} setCareVoiceFiles={setCareVoiceFiles} />
                       </div>
                       <div style={{ display: selectedRole === "Client Profitability & Service" ? "block" : "none" }}>
                         <CareServicesEligibility selectedRole="Client Profitability & Service" handleClick={handleClick} setShowFeedbackPopup={setShowFeedbackPopup} />
@@ -1305,16 +1560,159 @@ const HomePage = () => {
                                       <span></span>
                                     </div>
                                   ) : (
-                                    <ReactMarkdown
-                                      children={msg.text
-                                        .replace(/```(?:\w+)?\n?/, "")
-                                        .replace(/```$/, "")
-                                      }
-                                      remarkPlugins={[remarkGfm]}
-                                      rehypePlugins={[rehypeRaw, rehypeHighlight]}
-                                    />
-                                  )}
+                                    <>
+                                      <ReactMarkdown
+                                        children={msg.text
+                                          .replace(/```(?:\w+)?\n?/, "")
+                                          .replace(/```$/, "")
+                                        }
+                                        remarkPlugins={[remarkGfm]}
+                                        rehypePlugins={[rehypeRaw, rehypeHighlight]}
+                                      />
 
+                                    </>
+                                  )}
+                                  {msg.sender === "bot" && msg.sources?.length > 0 && (
+                                    <div style={{ marginTop: "12px" }}>
+                                      <div
+                                        style={{
+                                          width: "100%",
+                                          height: "1px",
+                                          background: "#E5E7EB",
+                                          marginBottom: "10px"
+                                        }}
+                                      />
+                                      <div style={{
+                                        fontSize: "13px",
+                                        fontWeight: 600,
+                                        marginBottom: "8px",
+                                        color: "#555"
+                                      }}>
+                                        SOURCE DOCUMENTS({Math.min(msg.sources.length, 5)})
+                                      </div>
+
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          flexDirection: expandedSource !== null ? "column" : "row",
+                                          gap: "10px",
+                                          overflowX: expandedSource !== null ? "hidden" : "auto"
+                                        }}
+                                      >
+                                        {msg.sources.slice(0, 5).map((src, i) => {
+                                          const isOpen = expandedSource === i;
+
+                                          return (
+                                            <div
+                                              key={`${src.document_name}-${i}`}
+                                              onClick={() => setExpandedSource(isOpen ? null : i)}
+
+
+                                              onMouseEnter={(e) => {
+                                                e.currentTarget.style.background = "#e4dff0";
+                                              }}
+                                              onMouseLeave={(e) => {
+                                                e.currentTarget.style.background = "transparent";
+                                              }}
+
+                                              style={{
+                                                minWidth: expandedSource !== null ? "100%" : "200px",
+                                                maxWidth: expandedSource !== null ? "100%" : "200px",
+                                                flexShrink: 0,
+                                                border: isOpen ? "1px solid #6C4CDC" : "1px solid #E5E7EB",
+                                                borderRadius: "4px",
+                                                padding: "12px 14px",
+                                                cursor: "pointer",
+                                                background: "transparent",
+                                                transition: "all 0.2s ease",
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                justifyContent: "center",
+                                                alignItems: "flex-start",
+                                                height: expandedSource !== null ? "auto" : "48px",
+                                              }}
+                                            >
+
+                                              {/* HEADER */}
+                                              <div
+                                                style={{
+                                                  display: "flex",
+                                                  justifyContent: "space-between",
+                                                  alignItems: "center",
+                                                  width: "100%"
+                                                }}
+                                              >
+
+                                                {/* LEFT SIDE */}
+                                                <div
+                                                  style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: "6px",
+                                                    overflow: "hidden"
+                                                  }}
+                                                >
+                                                  <FiFileText size={18} color="#6C4CDC" />
+
+                                                  <span
+                                                    style={{
+                                                      fontSize: "13px",
+                                                      fontWeight: 500,
+                                                      color: "#6C4CDC",
+                                                      overflow: "hidden",
+                                                      textOverflow: "ellipsis",
+                                                      whiteSpace: "nowrap",
+                                                      maxWidth: "120px"
+                                                    }}
+                                                  >
+                                                    {src.document_name.length > 20
+                                                      ? src.document_name.slice(0, 20) + "..."
+                                                      : src.document_name}
+                                                  </span>
+                                                </div>
+
+                                                {/* RIGHT SIDE */}
+                                                <div
+                                                  style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: "6px",
+                                                    color: "#6C4CDC",
+                                                    fontSize: "11px",
+                                                    fontWeight: 500
+                                                  }}
+                                                >
+                                                  {i + 1}
+
+                                                  {isOpen ? (
+                                                    <IoChevronDown size={14} />
+                                                  ) : (
+                                                    <IoChevronForward size={14} />
+                                                  )}
+                                                </div>
+
+                                              </div>
+
+                                              {/* EXPANDED */}
+                                              {isOpen && (
+                                                <div
+                                                  style={{
+                                                    marginTop: "10px",
+                                                    fontSize: "13px",
+                                                    color: "#555",
+                                                    lineHeight: "18px",
+                                                    whiteSpace: "pre-wrap"
+                                                  }}
+                                                >
+                                                  {src.chunk_text || src.text || "No preview available"}
+                                                </div>
+                                              )}
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
                                   {/* 👇 ADD THIS BLOCK RIGHT HERE */}
                                   {msg.sender === "bot" && msg.richContent?.length > 0 && (
                                     <div style={{ marginTop: "10px" }}>
@@ -1393,6 +1791,111 @@ const HomePage = () => {
                                     </div>
                                   )}
                                 </div>
+                                {msg.sender === "bot" && !msg.temp && (
+                                  <div style={{ width: "100%" }}>
+
+                                    <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+
+                                      {
+                                        feedbackState[`${selectedRole}_${index}`]?.type === "up" ? (
+                                          <BiSolidLike
+                                            size={24}
+                                            style={{ cursor: "pointer", color: "#4FD46E" }}
+                                            onClick={() => {
+                                              handleFeedbackClick(index, "up");
+                                              submitFeedback(index, msg.text, "up");
+                                            }}
+                                          />
+                                        ) : (
+                                          <BiLike
+                                            size={24}
+                                            style={{ cursor: "pointer", color: "#999" }}
+                                            onClick={() => {
+                                              handleFeedbackClick(index, "up");
+                                              submitFeedback(index, msg.text, "up");
+                                            }}
+                                          />
+                                        )
+                                      }
+
+                                      {
+                                        feedbackState[`${selectedRole}_${index}`]?.type === "down" ? (
+                                          <BiSolidDislike
+                                            size={24}
+                                            style={{ cursor: "pointer", color: "#C6685F" }}
+                                            onClick={() => {
+                                              const key = `${selectedRole}_${index}`;
+
+                                              // toggle OFF
+                                              if (feedbackMode && feedbackMode.index === index) {
+                                                setFeedbackMode(null);
+                                                setFeedbackState((prev) => ({
+                                                  ...prev,
+                                                  [key]: { ...prev[key], type: null }
+                                                }));
+                                                return;
+                                              }
+
+                                              // toggle ON
+                                              setFeedbackState((prev) => ({
+                                                ...prev,
+                                                [key]: { ...prev[key], type: "down" }
+                                              }));
+
+                                              setFeedbackMode({
+                                                index,
+                                                message: msg.text
+                                              });
+
+                                              setTimeout(() => {
+                                                textareaRef.current?.focus();
+                                              }, 100);
+                                            }}
+                                          />
+                                        ) : (
+                                          <BiDislike
+                                            size={24}
+                                            style={{ cursor: "pointer", color: "#999" }}
+                                            onClick={() => {
+                                              const key = `${selectedRole}_${index}`;
+
+                                              setFeedbackState((prev) => ({
+                                                ...prev,
+                                                [key]: { ...prev[key], type: "down" }
+                                              }));
+
+                                              setFeedbackMode({
+                                                index,
+                                                message: msg.text
+                                              });
+
+                                              setTimeout(() => {
+                                                textareaRef.current?.focus();
+                                              }, 100);
+                                            }}
+                                          />
+                                        )
+                                      }
+                                    </div>
+
+                                    {/* 👇 MESSAGE BELOW THUMBS (ONLY ON DISLIKE) */}
+                                    {feedbackMode && feedbackMode.index === index && (
+                                      <div
+                                        style={{
+                                          marginTop: "6px",
+                                          fontSize: "13px",
+                                          fontWeight: 500,
+                                          color: "#3C3B42",
+                                          fontFamily: "Inter",
+                                          textAlign: "end"
+                                        }}
+                                      >
+                                        Please submit your feedback below 👇 Or press icon again to discard
+                                      </div>
+                                    )}
+
+                                  </div>
+                                )}
                               </div>
                               {msg.sender === "user" && (
                                 <div
@@ -1478,7 +1981,48 @@ const HomePage = () => {
 
                         </div>
                       }
-
+                      {isCareVoicePage && !careVoiceStarted ? (
+                        <button
+                          onClick={startCareVoiceSession}
+                          disabled={isStartingSession}
+                          style={{
+                            padding: "8px 14px",
+                            background: isStartingSession ? "#C9C4E3" : "#6C4CDC",
+                            color: "#fff",
+                            borderRadius: "8px",
+                            border: "none",
+                            cursor: isStartingSession ? "not-allowed" : "pointer",
+                            fontSize: "13px",
+                            fontFamily: "Inter",
+                            fontWeight: "500",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            marginLeft: "auto"
+                          }}
+                        >
+                          {isStartingSession ? (
+                            <>
+                              <div className="mini-loader"></div>
+                              Starting...
+                            </>
+                          ) : (
+                            "Start Session"
+                          )}
+                        </button>
+                      ) : isCareVoicePage ? (
+                        <div
+                          style={{
+                            fontSize: "12px",
+                            color: "#6C4CDC",
+                            fontWeight: 500,
+                            marginLeft: "auto",
+                            width: "120px"
+                          }}
+                        >
+                          Session Active
+                        </div>
+                      ) : null}
                       <div style={{ position: "relative", marginTop: "10px", marginBottom: "18px", width: "100%", display: "flex", alignSelf: "center" }}>
                         <img
                           src={askAiSearchIcon}
@@ -1497,7 +2041,7 @@ const HomePage = () => {
 
                         <textarea
                           rows={1}
-                          placeholder="Ask me anything..."
+                          placeholder={feedbackMode ? "Please submit your feedback here..." : "Ask me anything..."}
                           ref={textareaRef}
                           defaultValue=""
                           onChange={(e) => {
@@ -1551,7 +2095,7 @@ const HomePage = () => {
                         <div
                           onClick={() => {
 
-                            if (isSTTActive) return; // LOCK SEND DURING STT
+                            if (isSTTActive || (isCareVoicePage && !careVoiceStarted)) return;
 
                             handleSend();
 
@@ -1635,6 +2179,68 @@ const HomePage = () => {
           />
         )
       }
+      {showSourceModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.4)",
+            zIndex: 2000,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center"
+          }}
+          onClick={() => setShowSourceModal(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#fff",
+              borderRadius: "16px",
+              padding: "20px",
+              width: "400px",
+              maxHeight: "60vh",
+              overflowY: "auto",
+              position: "relative" // ✅ IMPORTANT
+            }}
+          >
+            {/* ❌ CROSS BUTTON */}
+            <div
+              onClick={() => setShowSourceModal(false)}
+              style={{
+                position: "absolute",
+                top: "12px",
+                right: "12px",
+                cursor: "pointer",
+                fontSize: "18px",
+                fontWeight: "bold",
+                color: "#666"
+              }}
+            >
+              ✕
+            </div>
+
+            {/* TITLE */}
+            <div style={{ fontWeight: 600, marginBottom: "12px" }}>
+              Sources
+            </div>
+
+            {/* SOURCES LIST */}
+            {selectedSources.map((src, index) => (
+              <div
+                key={index}
+                style={{
+                  padding: "10px",
+                  borderBottom: "1px solid #eee",
+                  fontSize: "14px"
+                }}
+              >
+                📄 {src.document_name}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </>
   );
 };
