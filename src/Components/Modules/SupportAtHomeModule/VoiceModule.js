@@ -789,6 +789,7 @@ const VoiceModule = (props) => {
             alert("Audio must be at least 10 seconds long.");
             return;
         }
+        if (setIsCareVoiceLocked) setIsCareVoiceLocked(true);
         try {
             if (platformType !== "windows" || platformType === "windows" || platformType !== "mac") {
                 console.log("ANDROID detected, using backend voice pipeline");
@@ -810,7 +811,7 @@ const VoiceModule = (props) => {
                 if (setGeneratedCareVoiceDocsCount) setGeneratedCareVoiceDocsCount(0);
                 if (setTotalCareVoiceDocsToGenerate) setTotalCareVoiceDocsToGenerate(0);
 
-
+                if (setIsCareVoiceLocked) setIsCareVoiceLocked(false);
                 // resetStaffUI();
                 return;
             }
