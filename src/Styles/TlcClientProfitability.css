@@ -171,10 +171,10 @@
 
 /* Saved on */
 .history-card-modern .saved-on {
-  color: #9ca3af;
+  color: #57575c;
   /* light grey */
   font-size: 13px;
-  font-weight: 400;
+  font-weight: 350;
 }
 
 .history-card-modern .saved-label {
@@ -185,16 +185,18 @@
 /* Filters */
 .history-card-modern .history-filters {
   font-size: 13px;
-  color: #333;
+  color: black;
+  font-weight: 400;
 }
 
 .history-card-modern .filter-item {
+  color:#57575c;
   font-weight: 400;
 }
 
 .history-card-modern .filter-item strong {
   color: #6C4CDC;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .tlc-profitibility-history-back-btn {
