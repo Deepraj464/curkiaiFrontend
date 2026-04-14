@@ -100,7 +100,7 @@ const NewFinancialHealth = (props) => {
             }
 
             const parsedRanges = result.data;
-            console.log("Parsed search ranges:", parsedRanges);
+            // console.log("Parsed search ranges:", parsedRanges);
 
             if (!parsedRanges || parsedRanges.length === 0) {
                 setFilteredHistoryList([]);
@@ -1129,7 +1129,7 @@ const NewFinancialHealth = (props) => {
 
                 // console.log("Analysis API response:", analysisRes);
                 analysisData = analysisRes.data;
-                console.log("Analysis API response data of type api:", analysisData);
+                // console.log("Analysis API response data of type api:", analysisData);
                 const askAiFrames = analysisData?.csv_data
                 updateTab({
                     progressStage: "preparing",
