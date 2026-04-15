@@ -211,15 +211,15 @@ const TlcNewClientProfitability = (props) => {
             id: 1,
             name: "Tab 1",
 
-            // ⬇️ CLIENT PROFITABILITY STATE
+            //CLIENT PROFITABILITY STATE
             responseData: null,
             selectedFiles: [],
             files: [],
-            // ⬇️ DATE (Custom Reporting style)
+            //DATE (Custom Reporting style)
             startDate: null,
             endDate: null,
 
-            // ⬇️ FILTERS (PER TAB)
+            //FILTERS (PER TAB)
             selectedState: [],
             selectedDepartment: [],
             selectedType: [],
