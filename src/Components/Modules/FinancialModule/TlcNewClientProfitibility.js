@@ -213,7 +213,8 @@ const TlcNewClientProfitability = (props) => {
         "mboutros@tenderlovingcaredisability.com.au",
         "rjodeh@tenderlovingcaredisability.com.au",
         "ryounes@tenderlovingcaredisability.com.au",
-        "stickner@tenderlovingcaredisability.com.au"
+        "stickner@tenderlovingcaredisability.com.au",
+        "q.benico@tenderlovingcaredisability.com.au"
     ];
 
     const isRestrictedUser = RESTRICTED_USERS.includes(
