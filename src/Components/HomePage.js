@@ -1595,7 +1595,7 @@ const HomePage = () => {
                             {isCareVoicePage
                               ? (careVoiceStarted
                                 ? "Ask Any Question Related To Care Voice Document"
-                                : "Click Start Session to ask questions to AI")
+                                : "Click Start Session To Unlock AI Assistance")
                               : isSoftwareConnectPage
                                 ? "API Connection Tutorials"
                                 : "Ask AI"}
