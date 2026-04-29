@@ -9,6 +9,7 @@ const MultiSelectCustom = ({
   rightIcon,
   height = 38,
   minWidth = 220,
+  width,
   isSingleSelect = false,
   disabled = false,
 }) => {
@@ -46,7 +47,7 @@ const MultiSelectCustom = ({
     <div
       className="custom-multiselect"
       ref={ref}
-      style={{ position: "relative", minWidth }}
+      style={{ position: "relative", minWidth,width:width }}
     >
       {/* INPUT */}
       <div

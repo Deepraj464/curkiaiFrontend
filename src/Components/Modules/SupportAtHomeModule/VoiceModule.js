@@ -2363,6 +2363,7 @@ const VoiceModule = (props) => {
                     setSelected={(arr) => setRole(arr?.[0]?.value || "Admin")}
                     isSingleSelect={true}
                     disabled={props.isMobileOrTablet}
+                    width={props.isMobileOrTablet && '100%'}
                 />
 
                 {role === "Staff" && !showGeneratedFilesUI && (
